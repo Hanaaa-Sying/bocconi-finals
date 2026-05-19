@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Routine</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#09091a;--bg2:#101022;--bg3:#161630;--bg4:#1c1c3a;
+  --t1:#ede8f5;--t2:#a898c0;--t3:#5e5475;
+  --purple:#9b8ec4;--teal:#7ab8a8;
+  --exam:#d87080;--gold:#d8b870;
+  --bd:rgba(155,142,196,0.14);--bd2:rgba(155,142,196,0.3);--r:12px;
+  --sh-modal:rgba(0,0,0,.65);--overlay-bg:rgba(0,0,0,.55);
+}
+:root.light{
+  --bg1:#f0f4f0;--bg2:#e6ede6;--bg3:#dae6da;--bg4:#cddccd;
+  --t1:#1c2e24;--t2:#3d6650;--t3:#7a9e85;
+  --purple:#6b4226;--teal:#4a8c7c;
+  --exam:#963850;--gold:#9e8030;
+  --bd:rgba(40,90,60,.16);--bd2:rgba(40,90,60,.32);
+  --sh-modal:rgba(0,0,0,.12);--overlay-bg:rgba(0,0,0,.35);
+}
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+body{background:var(--bg1);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.5;user-select:none}
+h1,h2,h3{font-family:'Crimson Pro',serif;font-weight:400}
+body::before{content:'';display:block;height:3px;background:linear-gradient(90deg,var(--purple),var(--teal),var(--gold));position:fixed;top:0;left:0;right:0;z-index:200}
+
+.wrap{max-width:640px;margin:0 auto;padding:1.75rem 1.5rem 4rem}
+
+/* HEADER */
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--bd)}
+.back-btn{background:none;border:none;color:var(--t3);font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:.3rem;display:block;transition:color .15s;letter-spacing:.06em;text-transform:uppercase}
+.back-btn:hover{color:var(--purple)}
+.proj-name{font-family:'Crimson Pro',serif;font-size:2rem;letter-spacing:.02em;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header-right{text-align:right}
+#clock{font-family:'Crimson Pro',serif;font-size:2rem;color:var(--purple);letter-spacing:.06em;line-height:1}
+.theme-toggle{font-size:.68rem;color:var(--t3);cursor:pointer;padding:3px 9px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;transition:all .2s;margin-top:.4rem;display:inline-block}
+.theme-toggle:hover{border-color:var(--bd2);color:var(--t2)}
+
+/* DATE NAV */
+.date-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem}
+.date-nav-btn{background:none;border:1px solid var(--bd);color:var(--t3);font-size:.75rem;cursor:pointer;padding:4px 12px;border-radius:20px;font-family:'Inter',sans-serif;transition:all .2s}
+.date-nav-btn:hover:not(:disabled){border-color:var(--bd2);color:var(--t2)}
+.date-nav-btn:disabled{opacity:.3;cursor:default}
+.date-label{font-family:'Crimson Pro',serif;font-size:1.15rem;color:var(--t1);text-align:center}
+.date-label-sub{font-size:.68rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-top:.1rem}
+.add-task-btn{background:none;border:1px solid rgba(155,142,196,.3);color:var(--purple);font-size:.75rem;cursor:pointer;padding:5px 14px;border-radius:20px;font-family:'Inter',sans-serif;transition:all .2s}
+.add-task-btn:hover{background:rgba(155,142,196,.1);border-color:var(--purple)}
+.add-task-btn:disabled{opacity:.3;cursor:default}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:48px;margin-bottom:2rem}
+.timeline::before{content:'';position:absolute;left:15px;top:0;bottom:0;width:1px;background:var(--bd)}
+
+.tl-empty{color:var(--t3);font-size:.82rem;font-style:italic;padding:.5rem 0;text-align:center}
+
+.tl-item{position:relative;margin-bottom:1.25rem}
+.tl-dot{position:absolute;left:-41px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--bg3);border:2px solid var(--bd2);transition:background .2s,border-color .2s;z-index:1}
+.tl-item.done .tl-dot{background:var(--teal);border-color:var(--teal)}
+.tl-item.overdue:not(.done) .tl-dot{border-color:var(--exam)}
+
+.tl-card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:1rem 1rem .8rem;transition:border-color .2s}
+.tl-item.done .tl-card{opacity:.55}
+.tl-item.overdue:not(.done) .tl-card{border-color:rgba(216,112,128,.25)}
+
+.tl-time{font-size:.65rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.tl-item.overdue:not(.done) .tl-time{color:var(--exam)}
+.tl-task{font-size:.9rem;color:var(--t1);line-height:1.35;margin-bottom:.4rem}
+.tl-item.done .tl-task{text-decoration:line-through;color:var(--t3)}
+.tl-notes{font-size:.75rem;color:var(--t3);font-style:italic;margin-bottom:.5rem;line-height:1.4}
+.tl-reward{font-size:.75rem;color:var(--gold);margin-bottom:.65rem;display:flex;align-items:center;gap:.35rem}
+.tl-reward-label{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+
+.tl-actions{display:flex;gap:.5rem;align-items:center}
+.tl-done-btn{padding:4px 14px;border-radius:6px;border:1px solid rgba(122,184,168,.35);background:transparent;color:var(--teal);font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.tl-done-btn:hover{background:rgba(122,184,168,.1);border-color:var(--teal)}
+.tl-del-btn{background:none;border:none;color:var(--t3);cursor:pointer;font-size:.75rem;padding:3px 6px;border-radius:4px;transition:color .15s;margin-left:auto}
+.tl-del-btn:hover{color:var(--exam)}
+.tl-done-tag{font-size:.68rem;color:var(--teal);letter-spacing:.05em}
+
+/* REWARD POOL */
+.pool-section{border-top:1px solid var(--bd);padding-top:1.5rem;margin-top:.5rem}
+.pool-title{font-family:'Crimson Pro',serif;font-size:1.1rem;color:var(--t2);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.pool-count{font-size:.72rem;color:var(--t3);font-family:'Inter',sans-serif}
+.pool-empty{font-size:.78rem;color:var(--t3);font-style:italic;padding:.5rem 0}
+
+.reward-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;margin-bottom:.55rem;transition:border-color .2s}
+.reward-item:hover{border-color:var(--bd2)}
+.reward-icon{font-size:1rem;flex-shrink:0}
+.reward-body{flex:1;min-width:0}
+.reward-text{font-size:.82rem;color:var(--t1);line-height:1.3}
+.reward-meta{font-size:.62rem;color:var(--t3);margin-top:.1rem}
+.redeem-btn{padding:3px 12px;border-radius:6px;border:1px solid rgba(216,184,112,.35);background:transparent;color:var(--gold);font-size:.7rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.redeem-btn:hover{background:rgba(216,184,112,.1);border-color:var(--gold)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:600;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--bg3);border:1px solid var(--bd2);border-radius:14px;padding:1.6rem;width:380px;max-width:calc(100vw - 2rem);box-shadow:0 20px 60px var(--sh-modal);animation:popIn .18s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Crimson Pro',serif;font-size:1.2rem;color:var(--t1);margin-bottom:1.1rem}
+.modal-field{margin-bottom:.75rem}
+.modal-label{font-size:.67rem;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.3rem;display:block}
+.modal-input,.modal-select,.modal-textarea{width:100%;background:var(--bg4);border:1px solid var(--bd);color:var(--t1);border-radius:7px;padding:.45rem .65rem;font-size:.8rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+.modal-input:focus,.modal-textarea:focus{border-color:var(--purple)}
+.modal-textarea{resize:vertical;min-height:60px}
+.modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.1rem}
+.modal-btn{padding:7px 18px;border-radius:7px;border:none;font-family:'Inter',sans-serif;font-size:.8rem;cursor:pointer;font-weight:500;transition:all .2s}
+.modal-btn.primary{background:var(--purple);color:#fff}
+.modal-btn.primary:hover{filter:brightness(1.15)}
+.modal-btn.secondary{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
+.modal-btn.secondary:hover{color:var(--t2);border-color:var(--bd2)}
+</style>
+</head>
+<body>
+<div style="height:3px"></div>
+<div class="wrap">
+
+<header>
+  <div>
+    <button class="back-btn" onclick="location.href='index.html'">← J人时刻</button>
+    <h1 class="proj-name" id="projName"></h1>
+  </div>
+  <div class="header-right">
+    <div id="clock">--:--:--</div>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+  </div>
+</header>
+
+<div class="date-nav">
+  <button class="date-nav-btn" id="prevBtn" onclick="goDay(-1)">← 昨天</button>
+  <div>
+    <div class="date-label" id="dateLabel"></div>
+    <div class="date-label-sub" id="dateSub"></div>
+  </div>
+  <button class="add-task-btn" id="addBtn" onclick="openAddModal()">+ 今日任务</button>
+</div>
+
+<div class="timeline" id="timeline"></div>
+
+<div class="pool-section">
+  <div class="pool-title">
+    兑奖池
+    <span class="pool-count" id="poolCount"></span>
+  </div>
+  <div id="poolList"></div>
+</div>
+
+</div>
+
+<!-- ADD TASK MODAL -->
+<div id="addModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-box">
+    <div class="modal-title">添加任务</div>
+    <div class="modal-field">
+      <label class="modal-label">任务名称</label>
+      <input type="text" id="addText" class="modal-input" placeholder="今天要做什么…" maxlength="120">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">DDL（今天几点前）</label>
+      <input type="time" id="addDdl" class="modal-input">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">备注（可选）</label>
+      <textarea id="addNotes" class="modal-textarea" placeholder="补充说明…"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">完成后的 Reward</label>
+      <input type="text" id="addReward" class="modal-input" placeholder="e.g. 去吃漂亮 brunch · 1h web 研究" maxlength="100">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeAddModal()">取消</button>
+      <button class="modal-btn primary" onclick="submitAdd()">添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PROJECT ─────────────────────────────────────────────────────────────────
+const projectId = new URLSearchParams(location.search).get('project');
+if (!projectId) { location.replace('index.html'); throw 0; }
+const _hub = JSON.parse(localStorage.getItem('jhub_projects_v1') || '[]');
+const _meta = _hub.find(p => p.id === projectId) || {};
+const projectName = _meta.name || projectId;
+document.title = projectName;
+document.getElementById('projName').textContent = projectName;
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+const DAYS_KEY    = projectId + '_days_v1';
+const REWARDS_KEY = projectId + '_rewards_v1';
+
+let days    = {};
+let rewards = [];
+let viewDate = todayIso();
+
+function load(){
+  const d = localStorage.getItem(DAYS_KEY);
+  days = d ? JSON.parse(d) : {};
+  const r = localStorage.getItem(REWARDS_KEY);
+  rewards = r ? JSON.parse(r) : [];
+}
+function saveDays(){localStorage.setItem(DAYS_KEY, JSON.stringify(days));}
+function saveRewards(){localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards));}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function todayIso(){
+  const n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
+}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmtDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  const days_ = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+function fmtDateSub(iso){
+  const d = new Date(iso + 'T00:00:00');
+  const days_ = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  return days_[d.getDay()].toUpperCase();
+}
+function isOverdue(ddl, date){
+  if(date !== todayIso()) return false;
+  const [h,m] = ddl.split(':').map(Number);
+  const now = new Date();
+  return now.getHours() > h || (now.getHours() === h && now.getMinutes() > m);
+}
+function isTodayView(){return viewDate === todayIso();}
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+function updateClock(){
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' +
+    String(n.getMinutes()).padStart(2,'0') + ':' +
+    String(n.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderDateNav();
+  renderTimeline();
+  renderPool();
+}
+
+function renderDateNav(){
+  const today = todayIso();
+  document.getElementById('dateLabel').textContent =
+    (viewDate === today ? 'Today · ' : '') + fmtDate(viewDate);
+  document.getElementById('dateSub').textContent = fmtDateSub(viewDate);
+  document.getElementById('addBtn').disabled = !isTodayView();
+}
+
+function renderTimeline(){
+  const tasks = (days[viewDate] || []).slice().sort((a,b)=>a.ddl.localeCompare(b.ddl));
+  const el = document.getElementById('timeline');
+  const isToday = isTodayView();
+  if(!tasks.length){
+    el.innerHTML = '<div class="tl-empty">' + (isToday ? '今天还没有任务 — 点右上角添加' : '这一天没有记录') + '</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(t => {
+    const overdue = isOverdue(t.ddl, viewDate);
+    const cls = (t.done ? ' done' : '') + (overdue && !t.done ? ' overdue' : '');
+    let actions = '';
+    if(isToday && !t.done){
+      actions = '<button class="tl-done-btn" onclick="completeTask(\''+t.id+'\')">完成</button>'
+              + '<button class="tl-del-btn" onclick="deleteTask(\''+t.id+'\')" title="删除">✕</button>';
+    } else if(t.done){
+      actions = '<span class="tl-done-tag">✓ 已完成</span>';
+    }
+    return '<div class="tl-item'+cls+'" id="tli-'+t.id+'">'
+      + '<div class="tl-dot"></div>'
+      + '<div class="tl-card">'
+      + '<div class="tl-time">⏰ ' + escHtml(t.ddl) + ' 前</div>'
+      + '<div class="tl-task">' + escHtml(t.text) + '</div>'
+      + (t.notes ? '<div class="tl-notes">' + escHtml(t.notes) + '</div>' : '')
+      + '<div class="tl-reward"><span class="tl-reward-label">Reward</span> 🎁 ' + escHtml(t.reward) + '</div>'
+      + '<div class="tl-actions">' + actions + '</div>'
+      + '</div></div>';
+  }).join('');
+}
+
+function renderPool(){
+  const pending = rewards.filter(r => !r.redeemed);
+  const el = document.getElementById('poolList');
+  const countEl = document.getElementById('poolCount');
+  countEl.textContent = pending.length ? '(' + pending.length + ' 待兑现)' : '';
+  if(!pending.length){
+    el.innerHTML = '<div class="pool-empty">暂无待兑现奖励</div>';
+    return;
+  }
+  el.innerHTML = pending.map(r =>
+    '<div class="reward-item">'
+    + '<span class="reward-icon">🎁</span>'
+    + '<div class="reward-body">'
+    + '<div class="reward-text">' + escHtml(r.text) + '</div>'
+    + '<div class="reward-meta">来自 · ' + escHtml(r.taskText) + ' · ' + r.date + '</div>'
+    + '</div>'
+    + '<button class="redeem-btn" onclick="redeemReward(\''+r.id+'\')">兑现</button>'
+    + '</div>'
+  ).join('');
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+function completeTask(id){
+  const tasks = days[viewDate] || [];
+  const t = tasks.find(x => x.id === id);
+  if(!t || t.done) return;
+  t.done = true;
+  saveDays();
+  rewards.push({
+    id: 'r_' + Date.now(),
+    text: t.reward,
+    taskText: t.text,
+    date: viewDate,
+    taskId: id,
+    redeemed: false
+  });
+  saveRewards();
+  renderAll();
+}
+
+function deleteTask(id){
+  if(!confirm('删除这个任务？')) return;
+  days[viewDate] = (days[viewDate] || []).filter(t => t.id !== id);
+  saveDays();
+  renderTimeline();
+}
+
+function redeemReward(id){
+  const r = rewards.find(x => x.id === id);
+  if(!r) return;
+  r.redeemed = true;
+  saveRewards();
+  renderPool();
+}
+
+// ─── DATE NAVIGATION ─────────────────────────────────────────────────────────
+function goDay(delta){
+  const d = new Date(viewDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  const newDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  if(newDate > todayIso()) return;
+  viewDate = newDate;
+  renderAll();
+  document.getElementById('prevBtn').disabled = false;
+}
+
+// ─── ADD MODAL ────────────────────────────────────────────────────────────────
+function openAddModal(){
+  if(!isTodayView()) return;
+  document.getElementById('addText').value = '';
+  document.getElementById('addDdl').value = '';
+  document.getElementById('addNotes').value = '';
+  document.getElementById('addReward').value = '';
+  document.getElementById('addModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('addText').focus(), 50);
+}
+function closeAddModal(){document.getElementById('addModal').style.display = 'none';}
+function submitAdd(){
+  const text   = document.getElementById('addText').value.trim();
+  const ddl    = document.getElementById('addDdl').value;
+  const notes  = document.getElementById('addNotes').value.trim();
+  const reward = document.getElementById('addReward').value.trim();
+  if(!text || !ddl || !reward){
+    if(!text) document.getElementById('addText').focus();
+    else if(!ddl) document.getElementById('addDdl').focus();
+    else document.getElementById('addReward').focus();
+    return;
+  }
+  if(!days[viewDate]) days[viewDate] = [];
+  days[viewDate].push({id:'t_'+Date.now(), text, ddl, notes, reward, done:false});
+  saveDays();
+  closeAddModal();
+  renderTimeline();
+}
+document.getElementById('addText').addEventListener('keydown', e=>{if(e.key==='Enter'&&e.ctrlKey)submitAdd();});
+document.getElementById('addReward').addEventListener('keydown', e=>{if(e.key==='Enter')submitAdd();});
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function initTheme(){
+  if(localStorage.getItem('bocconi_theme')==='light'){
+    document.documentElement.classList.add('light');
+    document.getElementById('themeBtn').textContent = '☾ Dark';
+  }
+}
+function toggleTheme(){
+  const on = document.documentElement.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = on ? '☾ Dark' : '☀ Light';
+  localStorage.setItem('bocconi_theme', on ? 'light' : 'dark');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+initTheme();
+load();
+renderAll();
+</script>
+</body>
+</html>

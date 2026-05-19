@@ -1,5 +1,10 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 新增 Daily Routine 项目模板
+- 新建 daily.html：垂直时间流 + 任务卡片（DDL/内容/reward）+ 兑奖池（完成任务 → reward 进入奖池 → 随时兑现）
+- 更新 index.html：新建项目弹窗加模板选择（Study Dashboard / Daily Routine），openProject 按模板路由到正确 HTML
+- 修改文件：daily.html（新建）、index.html
+
 ## 2026-05-19 — 新增 J人时刻 元 Dashboard（多项目支持）
 - index.html 重写为 J人时刻 项目列表 hub：显示项目卡片，支持新建/删除项目
 - dashboard.html 改为按 ?project=id URL 参数运行：所有 localStorage key 加 projectId 前缀，支持任意项目数据隔离

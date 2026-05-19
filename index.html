@@ -78,6 +78,12 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
 .color-swatch:hover{transform:scale(1.2)}
 .color-swatch.sel{border-color:var(--t1)}
+.tpl-row{display:flex;gap:.5rem}
+.tpl-btn{flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--t3);font-size:.75rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;text-align:center;line-height:1.3}
+.tpl-btn:hover{border-color:var(--bd2);color:var(--t2)}
+.tpl-btn.sel{border-color:var(--purple);color:var(--purple);background:rgba(155,142,196,.08)}
+.tpl-name{font-weight:500;display:block}
+.tpl-desc{font-size:.65rem;opacity:.7;margin-top:2px;display:block}
 </style>
 </head>
 <body>
@@ -109,6 +115,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
       <input type="text" id="newName" class="modal-input" placeholder="e.g. Language Learning" maxlength="40">
     </div>
     <div class="modal-field">
+      <label class="modal-label">模板类型</label>
+      <div class="tpl-row" id="tplRow"></div>
+    </div>
+    <div class="modal-field">
       <label class="modal-label">颜色</label>
       <div class="color-row" id="colorRow"></div>
     </div>
@@ -124,6 +134,7 @@ const HUB_KEY = 'jhub_projects_v1';
 const PALETTE = ['#9b8ec4','#7ab8a8','#d8b870','#80c4a0','#d4a0b8','#78c4e0'];
 let projects = [];
 let selectedColor = PALETTE[0];
+let selectedTpl = 'dash';
 
 function loadProjects(){
   const raw = localStorage.getItem(HUB_KEY);
@@ -145,24 +156,29 @@ function renderGrid(){
   if(!projects.length){el.innerHTML='<div class="empty-state">暂无项目</div>';return;}
   el.innerHTML = projects.map(p => {
     const isLocked = p.id === 'bocconi';
+    const tplTag = p.template === 'daily' ? ' · Daily Routine' : ' · Study Dashboard';
     return '<div class="proj-card" onclick="openProject(\''+p.id+'\')">'
       + '<div class="proj-accent" style="background:'+p.color+'"></div>'
       + '<div class="proj-name">'+escHtml(p.name)+'</div>'
-      + '<div class="proj-meta">创建于 '+fmtDate(p.created)+'</div>'
+      + '<div class="proj-meta">创建于 '+fmtDate(p.created)+tplTag+'</div>'
       + '<button class="proj-del'+(isLocked?' locked':'')
       + '" onclick="event.stopPropagation();deleteProject(\''+p.id+'\')" title="删除">&#10005;</button>'
       + '</div>';
   }).join('');
 }
 
-function openProject(id){location.href='dashboard.html?project='+id;}
+function openProject(id){
+  const p = projects.find(x => x.id === id);
+  const tpl = (p && p.template === 'daily') ? 'daily.html' : 'dashboard.html';
+  location.href = tpl + '?project=' + id;
+}
 
 function deleteProject(id){
   if(id === 'bocconi'){alert('Bocconi Final 项目不可删除。');return;}
   const p = projects.find(x => x.id === id);
   if(!p)return;
   if(!confirm('删除项目"'+p.name+'"？所有数据将永久清除。'))return;
-  ['_plan_v7','_scratch_v1','_cats_v1','_evts_v1','_hidden_evts_v1','_last_saved'].forEach(suffix=>{
+  ['_plan_v7','_scratch_v1','_cats_v1','_evts_v1','_hidden_evts_v1','_last_saved','_days_v1','_rewards_v1'].forEach(suffix=>{
     localStorage.removeItem(id + suffix);
   });
   projects = projects.filter(x => x.id !== id);
@@ -176,11 +192,25 @@ function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 function openNewModal(){
   document.getElementById('newName').value = '';
   selectedColor = PALETTE[projects.length % PALETTE.length];
+  selectedTpl = 'dash';
+  renderTplRow();
   renderColorRow();
   document.getElementById('newModal').style.display = 'flex';
   setTimeout(()=>document.getElementById('newName').focus(), 50);
 }
 function closeNewModal(){document.getElementById('newModal').style.display = 'none';}
+function renderTplRow(){
+  document.getElementById('tplRow').innerHTML =
+    '<button class="tpl-btn'+(selectedTpl==='dash'?' sel':'')+'" onclick="selectTpl(\'dash\')">'
+    + '<span class="tpl-name">Study Dashboard</span>'
+    + '<span class="tpl-desc">任务计划 · 日历 · 待办</span>'
+    + '</button>'
+    + '<button class="tpl-btn'+(selectedTpl==='daily'?' sel':'')+'" onclick="selectTpl(\'daily\')">'
+    + '<span class="tpl-name">Daily Routine</span>'
+    + '<span class="tpl-desc">时间流 · 奖励机制</span>'
+    + '</button>';
+}
+function selectTpl(t){selectedTpl=t;renderTplRow();}
 function renderColorRow(){
   document.getElementById('colorRow').innerHTML = PALETTE.map(c =>
     '<div class="color-swatch'+(c===selectedColor?' sel':'')+'" style="background:'+c+'" onclick="selectColor(\''+c+'\')"></div>'
@@ -193,10 +223,11 @@ function submitNewModal(){
   const id = 'proj_' + Date.now();
   const today = new Date();
   const created = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  projects.push({id, name, created, color: selectedColor});
+  projects.push({id, name, created, color: selectedColor, template: selectedTpl});
   saveProjects();
   closeNewModal();
-  location.href = 'dashboard.html?project=' + id;
+  const tplFile = selectedTpl === 'daily' ? 'daily.html' : 'dashboard.html';
+  location.href = tplFile + '?project=' + id;
 }
 document.getElementById('newName').addEventListener('keydown', e=>{if(e.key==='Enter')submitNewModal();});
 
