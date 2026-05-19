@@ -708,8 +708,9 @@ function saveApiKey(){
 }
 
 async function _startChat(){
+  _chatMsgs.push({role:'user',content:'（开始）'});  // internal trigger, keeps msgs starting with user
   document.getElementById('chatTyping').style.display='flex';
-  const reply=await _callClaude([{role:'user',content:'（开始）'}]);
+  const reply=await _callClaude(_chatMsgs);
   document.getElementById('chatTyping').style.display='none';
   if(reply)_appendChatMsg('assistant',reply);
   setTimeout(()=>document.getElementById('chatInput').focus(),50);
