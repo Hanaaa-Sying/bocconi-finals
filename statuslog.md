@@ -1,5 +1,12 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 每日主线任务联动其他项目任务
+
+- daily.html：三栏每列底部显示"来自其他项目"区块，自动读取 jhub_projects_v1 中其他项目当天的计划任务
+- 勾选联动任务同步写回源项目的 `<pid>_plan_v7`，双向同步；明天列的联动任务禁用勾选
+- 新增 `getLinkedTasks(date)` / `toggleLinkedTask(pid, taskId, date, isDone)` 两个函数
+- 文件：`daily.html`
+
 ## 2026-05-19 — 每日主线任务改为三栏布局
 - daily.html 重写为左中右三栏：左=前一天（只读），中=今天（可添加/完成），右=明天（可计划）
 - 顶部导航箭头回溯历史，往后最多到今天（center 列），右列始终是 center+1 天，最多明天

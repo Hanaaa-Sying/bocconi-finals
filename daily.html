@@ -129,6 +129,18 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .modal-btn.secondary{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
 .modal-btn.secondary:hover{color:var(--t2);border-color:var(--bd2)}
 
+/* LINKED TASKS (from other projects) */
+.linked-section{margin-top:.75rem;padding-top:.65rem;border-top:1px dashed var(--bd)}
+.linked-hd{font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.45rem}
+.linked-item{display:flex;align-items:flex-start;gap:.5rem;padding:.35rem .4rem;border-radius:6px;cursor:pointer;transition:background .15s}
+.linked-item:hover{background:rgba(155,142,196,.06)}
+.linked-cb{width:13px;height:13px;accent-color:var(--purple);cursor:pointer;flex-shrink:0;margin-top:3px}
+.linked-badge{font-size:.55rem;font-weight:500;padding:1px 5px;border-radius:10px;color:#fff;white-space:nowrap;flex-shrink:0;margin-top:2px;opacity:.85}
+.linked-body{flex:1;min-width:0}
+.linked-course{font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:1px}
+.linked-text{font-size:.72rem;color:var(--t2);line-height:1.3}
+.linked-item.done .linked-text{text-decoration:line-through;color:var(--t3)}
+
 @media(max-width:700px){.three-col{grid-template-columns:1fr}.col.is-past{display:none}}
 </style>
 </head>
@@ -323,17 +335,21 @@ function renderTimeline(iso, containerId){
   const t = today();
   const tm = tomorrow();
   const tasks = (days[iso]||[]).slice().sort((a,b)=>a.ddl.localeCompare(b.ddl));
+  const linked = getLinkedTasks(iso);
   const el = document.getElementById(containerId);
-  const canComplete = (iso === t);   // only today's tasks can be completed
-  const canAdd = (iso <= tm);        // today and tomorrow can have tasks added
+  const canComplete = (iso === t);
+  const canAdd = (iso <= tm);
   const isPast = iso < t;
+  let html = '';
 
-  if(!tasks.length){
-    let msg = isPast ? '无记录' : (iso===tm ? '暂无计划' : '今天还没有任务');
+  if(!tasks.length && !linked.length){
+    const msg = isPast ? '无记录' : (iso===tm ? '暂无计划' : '今天还没有任务');
     el.innerHTML = '<div class="col-empty">'+msg+'</div>';
     return;
   }
-  el.innerHTML = tasks.map(t_ => {
+
+  // Personal tasks (time-sorted)
+  html += tasks.map(t_ => {
     const overdue = isOverdue(t_.ddl, iso);
     const cls = 'tl-item'+(t_.done?' done':'')+(overdue&&!t_.done?' overdue':'');
     let actions = '';
@@ -343,7 +359,6 @@ function renderTimeline(iso, containerId){
     } else if(t_.done){
       actions='<span class="tl-done-tag">✓ 已完成</span>';
     } else if(canAdd && !isPast){
-      // tomorrow tasks: can delete, can't complete
       actions='<span class="tl-plan-tag">计划中</span>'
              +'<button class="tl-del-btn" onclick="deleteTask(\''+iso+'\',\''+t_.id+'\')" title="删除">✕</button>';
     } else {
@@ -358,6 +373,28 @@ function renderTimeline(iso, containerId){
       +'<div class="tl-actions">'+actions+'</div>'
       +'</div></div>';
   }).join('');
+
+  // Linked tasks from other projects
+  if(linked.length){
+    html += '<div class="linked-section"><div class="linked-hd">来自其他项目</div>';
+    html += linked.map(lk => {
+      const checked = lk.done ? ' checked' : '';
+      const doneCls = lk.done ? ' done' : '';
+      // checkbox is interactive for today and past (can fix yesterday's forgotten tasks), read-only for future
+      const disabled = (iso > t) ? ' disabled' : '';
+      const onChange = disabled ? '' : ' onchange="toggleLinkedTask(\''+lk.projectId+'\',\''+lk.taskId+'\',\''+iso+'\',this.checked)"';
+      return '<div class="linked-item'+doneCls+'">'
+        +'<input type="checkbox" class="linked-cb"'+checked+disabled+onChange+'>'
+        +'<span class="linked-badge" style="background:'+lk.projectColor+'">'+escHtml(lk.projectName)+'</span>'
+        +'<div class="linked-body">'
+        +(lk.course?'<div class="linked-course" style="color:'+lk.projectColor+'">'+escHtml(lk.course)+'</div>':'')
+        +'<div class="linked-text">'+escHtml(lk.text)+'</div>'
+        +'</div></div>';
+    }).join('');
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
 }
 
 function renderPool(){
@@ -375,6 +412,42 @@ function renderPool(){
     +'<button class="redeem-btn" onclick="redeemReward(\''+r.id+'\')">兑现</button>'
     +'</div>'
   ).join('');
+}
+
+// ─── LINKED TASKS (cross-project) ────────────────────────────────────────────
+const BUILTIN_CATS = {llm:'LLM',sno:'SNO',mc:'MC',sociology:'Sociology',ielts:'IELTS',other:'Other'};
+
+function getLinkedTasks(date){
+  const hub = JSON.parse(localStorage.getItem('jhub_projects_v1')||'[]');
+  const result = [];
+  hub.forEach(p=>{
+    if(p.id===projectId||p.template==='daily') return;
+    const raw = localStorage.getItem(p.id+'_plan_v7');
+    if(!raw) return;
+    let plan; try{plan=JSON.parse(raw);}catch(e){return;}
+    const tasks = plan[date];
+    if(!tasks||!tasks.length) return;
+    const catsRaw = localStorage.getItem(p.id+'_cats_v1');
+    let cats=[]; try{if(catsRaw)cats=JSON.parse(catsRaw);}catch(e){}
+    tasks.forEach(t=>{
+      const cat = (cats.find(c=>c.key===t.c)||{}).label || BUILTIN_CATS[t.c] || (t.c||'').toUpperCase();
+      result.push({projectId:p.id, projectName:p.name, projectColor:p.color||'#9b8ec4', taskId:t.id, text:t.t, course:cat, done:t.done||false});
+    });
+  });
+  return result;
+}
+
+function toggleLinkedTask(pid, taskId, date, isDone){
+  const key = pid+'_plan_v7';
+  const raw = localStorage.getItem(key);
+  if(!raw) return;
+  let plan; try{plan=JSON.parse(raw);}catch(e){return;}
+  const tasks = plan[date]||[];
+  const task = tasks.find(t=>t.id===taskId);
+  if(!task) return;
+  task.done = isDone;
+  localStorage.setItem(key, JSON.stringify(plan));
+  renderAll();
 }
 
 // ─── ACTIONS ─────────────────────────────────────────────────────────────────
