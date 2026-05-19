@@ -1904,10 +1904,24 @@ async function fsInitHandle(){
 }
 
 async function onFsBtnClick(){
-  if(fileHandle)return; // already active
+  if(fileHandle)return;
   if(!window.showSaveFilePicker)return;
   try{
     const h=await window.showSaveFilePicker({suggestedName:'dashboard-data.json',types:[{description:'JSON Data',accept:{'application/json':['.json']}}]});
+    // If the selected file already has valid data, load it instead of overwriting
+    try{
+      const file=await h.getFile();
+      if(file.size>10){
+        const data=JSON.parse(await file.text());
+        if(data&&data.plan){
+          _applyFileData(data);
+          fileHandle=h;
+          await _setFsHandle(h);
+          _applyAndRefresh();
+          return;
+        }
+      }
+    }catch(e){/* empty or invalid file — fall through to fresh write */}
     fileHandle=h;
     await _setFsHandle(h);
     await _fsWrite();

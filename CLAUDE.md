@@ -49,7 +49,7 @@ All state lives in JavaScript variables, persisted via two mechanisms:
 
 ## After every code change
 
-**Always append a log entry to `D:\BocconiFinals\statuslog.md`** in this format:
+**Step 1 — append a log entry to `D:\BocconiFinals\statuslog.md`** in this format:
 
 ```
 ## YYYY-MM-DD — <one-line summary>
@@ -57,7 +57,17 @@ All state lives in JavaScript variables, persisted via two mechanisms:
 - <file(s) modified>
 ```
 
-Use today's date. Keep entries short (2–4 bullets max). Do not skip this step.
+Use today's date. Keep entries short (2–4 bullets max).
+
+**Step 2 — commit and push to GitHub:**
+
+```powershell
+git -C "D:\BocconiFinals" add dashboard.html statuslog.md CLAUDE.md index.html .gitignore
+git -C "D:\BocconiFinals" commit -m "<same one-line summary as statuslog>"
+git -C "D:\BocconiFinals" push origin main
+```
+
+Only stage the files listed above — never stage `dashboard-data.json` (personal data). Do not skip this step.
 
 ---
 

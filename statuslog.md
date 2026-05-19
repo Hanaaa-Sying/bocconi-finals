@@ -1,5 +1,9 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 修复"开启文件保存"覆盖已有数据的问题
+- `onFsBtnClick()` 选中已有文件时先读内容，有有效数据则加载而非覆盖，防止跨 origin 切换后数据丢失
+- 文件：`dashboard.html`
+
 ## 2026-05-19 — 修复 Task List 新类目不显示 + 深浅主题颜色改善
 - Bug1: `addCategory()` 和 `deleteCategory()` 新增 `renderTodoCourseRow()` 调用，确保 Task List 标签栏实时同步
 - Bug2: `injectCategoryCSS()` 改为生成 `:root:not(.light)` / `:root.light` 双套规则，不再用单一 hex 覆盖 CSS 变量
