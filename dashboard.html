@@ -39,6 +39,8 @@ body::before{content:'';display:block;height:3px;background:linear-gradient(90de
 
 .wrap{max-width:1380px;margin:0 auto;padding:1.75rem 2rem}
 header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--bd)}
+.back-btn{background:none;border:none;color:var(--t3);font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:.3rem;display:block;transition:color .15s;letter-spacing:.06em;text-transform:uppercase}
+.back-btn:hover{color:var(--purple)}
 .hl h1{font-size:2.4rem;letter-spacing:.02em;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hl p{color:var(--t3);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-top:.2rem}
 .hr{text-align:right}
@@ -237,8 +239,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 
 <header>
   <div class="hl">
-    <h1>Bocconi Finals</h1>
-    <p>Study Dashboard &middot; Spring 2026</p>
+    <button class="back-btn" onclick="location.href='index.html'">← J人时刻</button>
+    <h1 id="projTitle"></h1>
+    <p id="projSubtitle">Study Dashboard</p>
   </div>
   <div class="hr">
     <div id="clock">--:--:--</div>
@@ -443,11 +446,20 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 
 
 <script>
+// ─── PROJECT ─────────────────────────────────────────────────────────────────
+const projectId = new URLSearchParams(location.search).get('project');
+if (!projectId) { location.replace('index.html'); throw 0; }
+const IS_BOCCONI = projectId === 'bocconi';
+const _hubProjects = JSON.parse(localStorage.getItem('jhub_projects_v1') || '[]');
+const _projectMeta = _hubProjects.find(p => p.id === projectId) || {};
+const projectName = _projectMeta.name || (IS_BOCCONI ? 'Bocconi Final' : projectId);
+document.title = projectName;
+
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTHS= ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-const EVENTS = [
+const EVENTS = IS_BOCCONI ? [
   {date:'2026-04-23',type:'pause',label:'Venice Break'},
   {date:'2026-04-24',type:'pause',label:'Venice Break'},
   {date:'2026-04-25',type:'pause',label:'Venice Break'},
@@ -464,10 +476,10 @@ const EVENTS = [
   {date:'2026-05-22',type:'exam', course:'ielts',    label:'IELTS Exam'},
   {date:'2026-05-27',type:'exam', course:'sno',      label:'SNO Final Exam'},
   {date:'2026-05-28',type:'exam', course:'sociology',label:'Sociology Final Exam'},
-];
+] : [];
 EVENTS.forEach((e,i)=>{e.id='bev_'+i;});
 
-const DEFAULT_PLAN = [
+const DEFAULT_PLAN = IS_BOCCONI ? [
 // ── Apr 21 ──────────────────────────────────────────────────────────────────
 {date:'2026-04-21', note:'Study begins!', tasks:[
   {id:'t_0421_0',c:'sno', t:'(Advanto) Enter 26×26 communication matrix + attribute table in UCINET; cross-check data with Member B'},
@@ -676,14 +688,15 @@ const DEFAULT_PLAN = [
 ]},
 // ── May 28 (Sociology Final Exam) ────────────────────────────────────────
 {date:'2026-05-28', note:'Sociology Final Exam', tasks:[]},
-];
+] : [];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const PLAN_KEY         = 'bocconi_plan_v7';
-const SCRATCH_KEY      = 'bocconi_scratch_v1';
-const CATEGORIES_KEY   = 'bocconi_cats_v1';
-const CUSTOM_EVENTS_KEY= 'bocconi_evts_v1';
-const HIDDEN_EVENTS_KEY= 'bocconi_hidden_evts_v1';
+const PLAN_KEY         = projectId + '_plan_v7';
+const SCRATCH_KEY      = projectId + '_scratch_v1';
+const CATEGORIES_KEY   = projectId + '_cats_v1';
+const CUSTOM_EVENTS_KEY= projectId + '_evts_v1';
+const HIDDEN_EVENTS_KEY= projectId + '_hidden_evts_v1';
+const LAST_SAVED_KEY   = projectId + '_last_saved';
 let planState    = {};
 let scratchItems = [];
 let categories   = [];
@@ -1567,7 +1580,7 @@ document.getElementById('newCatName').addEventListener('keydown',e=>{if(e.key===
 document.getElementById('evtLabel').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)submitAddEventModal();});
 
 // ─── FILE STORAGE (persistent save to disk, survives browser cache clearing) ───
-const FS_DB='bocconi_fsh',FS_STORE='h',FS_KEY='d';
+const FS_DB='jhub_'+projectId+'_fsh',FS_STORE='h',FS_KEY='d';
 let fileHandle=null,fsWriteTimer=null;
 
 function _openFsDb(){return new Promise((res,rej)=>{const r=indexedDB.open(FS_DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(FS_STORE);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
@@ -1586,7 +1599,7 @@ async function _fsWrite(){
     const w=await fileHandle.createWritable();
     await w.write(JSON.stringify(_fsAllData(),null,2));
     await w.close();
-    localStorage.setItem('bocconi_last_saved',new Date().toISOString());
+    localStorage.setItem(LAST_SAVED_KEY,new Date().toISOString());
     _setFsBtn('ok','● 已自动保存');
   }catch(e){
     if(e.name==='NotFoundError'||(e.message&&e.message.includes('could not be found'))){
@@ -1679,7 +1692,7 @@ async function reloadFromPicker(){
     const [h]=await window.showOpenFilePicker({types:[{description:'JSON Data',accept:{'application/json':['.json']}}]});
     const file=await h.getFile();
     const data=JSON.parse(await file.text());
-    const localLastSaved=localStorage.getItem('bocconi_last_saved');
+    const localLastSaved=localStorage.getItem(LAST_SAVED_KEY);
     if(localLastSaved&&data.savedAt&&new Date(localLastSaved)>new Date(data.savedAt)){
       const fileDt=new Date(data.savedAt).toLocaleString('zh-CN');
       const localDt=new Date(localLastSaved).toLocaleString('zh-CN');
@@ -1716,6 +1729,7 @@ async function onReconnectClick(){
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 (async()=>{
+  document.getElementById('projTitle').textContent = projectName;
   initTheme();
   loadCategories();
   loadCustomEvents();
@@ -1734,8 +1748,16 @@ async function onReconnectClick(){
   injectCategoryCSS();
   renderPlan();
   renderScratch();
-  renderCal(2026,3,'calApr');
-  renderCal(2026,4,'calMay');
+  if(IS_BOCCONI){
+    renderCal(2026,3,'calApr');
+    renderCal(2026,4,'calMay');
+  }else{
+    const _now=new Date();
+    const _y=_now.getFullYear(),_m=_now.getMonth();
+    const _nd=new Date(_y,_m+1,1);
+    renderCal(_y,_m,'calApr');
+    renderCal(_nd.getFullYear(),_nd.getMonth(),'calMay');
+  }
   renderEvList();
   renderLegend();
 })();

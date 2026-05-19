@@ -1,5 +1,12 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 新增 J人时刻 元 Dashboard（多项目支持）
+- index.html 重写为 J人时刻 项目列表 hub：显示项目卡片，支持新建/删除项目
+- dashboard.html 改为按 ?project=id URL 参数运行：所有 localStorage key 加 projectId 前缀，支持任意项目数据隔离
+- EVENTS 和 DEFAULT_PLAN 包在 IS_BOCCONI 条件中；新建项目从空白状态开始，日历显示当前月+下月
+- 页头加"← J人时刻"返回按钮，标题动态显示项目名
+- 修改文件：index.html、dashboard.html、statuslog.md
+
 ## 2026-05-19 — 删除有效学习时间功能
 - 移除 scoreboardPanel HTML、Log Study Session modal、Manage Study Methods modal
 - 删除相关 CSS（score-card、eff-preview、method-row 等全部样式）

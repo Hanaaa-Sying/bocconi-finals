@@ -1,2 +1,222 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=dashboard.html"><title>Bocconi Finals</title></head><body></body></html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J人时刻</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#09091a;--bg2:#101022;--bg3:#161630;--bg4:#1c1c3a;
+  --t1:#ede8f5;--t2:#a898c0;--t3:#5e5475;
+  --purple:#9b8ec4;--teal:#7ab8a8;
+  --bd:rgba(155,142,196,0.14);--bd2:rgba(155,142,196,0.3);--r:12px;
+  --sh-modal:rgba(0,0,0,.65);--overlay-bg:rgba(0,0,0,.55);
+  --exam:#d87080;
+}
+:root.light{
+  --bg1:#f0f4f0;--bg2:#e6ede6;--bg3:#dae6da;--bg4:#cddccd;
+  --t1:#1c2e24;--t2:#3d6650;--t3:#7a9e85;
+  --purple:#6b4226;--teal:#4a8c7c;
+  --bd:rgba(40,90,60,.16);--bd2:rgba(40,90,60,.32);
+  --sh-modal:rgba(0,0,0,.12);--overlay-bg:rgba(0,0,0,.35);
+  --exam:#963850;
+}
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+body{background:var(--bg1);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.5;user-select:none}
+h1,h2{font-family:'Crimson Pro',serif;font-weight:400}
+body::before{content:'';display:block;height:3px;background:linear-gradient(90deg,#b09cd8,#9b8ec4,#7ab8a8);position:fixed;top:0;left:0;right:0;z-index:200}
+
+.wrap{max-width:900px;margin:0 auto;padding:2.5rem 2rem}
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--bd)}
+.hub-title{font-size:2.8rem;letter-spacing:.03em;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hub-sub{color:var(--t3);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-top:.25rem}
+.header-actions{display:flex;gap:.6rem;align-items:center}
+
+.new-btn{padding:8px 18px;border-radius:8px;border:1px solid var(--purple);background:transparent;color:var(--purple);font-family:'Inter',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s}
+.new-btn:hover{background:rgba(155,142,196,.12)}
+.theme-toggle{font-size:.72rem;color:var(--t3);cursor:pointer;padding:4px 10px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;transition:all .2s}
+.theme-toggle:hover{border-color:var(--bd2);color:var(--t2)}
+
+.section-hd{font-family:'Crimson Pro',serif;font-size:1rem;color:var(--t2);margin-bottom:1.2rem;letter-spacing:.05em}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+
+.proj-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:1.4rem 1.4rem 1rem;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;position:relative;display:flex;flex-direction:column;gap:.5rem}
+.proj-card:hover{border-color:var(--bd2);background:var(--bg3);transform:translateY(-2px)}
+.proj-accent{width:28px;height:3px;border-radius:2px;margin-bottom:.2rem}
+.proj-name{font-family:'Crimson Pro',serif;font-size:1.3rem;color:var(--t1);line-height:1.2}
+.proj-meta{font-size:.65rem;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-top:.1rem}
+.proj-del{position:absolute;top:.7rem;right:.7rem;background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem;padding:3px 6px;border-radius:5px;line-height:1;opacity:0;transition:opacity .15s,color .15s}
+.proj-card:hover .proj-del{opacity:1}
+.proj-del:hover{color:var(--exam)!important}
+.proj-del.locked{display:none}
+
+.empty-state{text-align:center;padding:4rem 0;color:var(--t3);font-size:.85rem}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:600;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--bg3);border:1px solid var(--bd2);border-radius:14px;padding:1.6rem;width:360px;max-width:calc(100vw - 2rem);box-shadow:0 20px 60px var(--sh-modal);animation:popIn .18s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Crimson Pro',serif;font-size:1.2rem;color:var(--t1);margin-bottom:1.1rem}
+.modal-field{margin-bottom:.85rem}
+.modal-label{font-size:.67rem;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.3rem;display:block}
+.modal-input{width:100%;background:var(--bg4);border:1px solid var(--bd);color:var(--t1);border-radius:7px;padding:.45rem .65rem;font-size:.8rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+.modal-input:focus{border-color:var(--purple)}
+.modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.1rem}
+.modal-btn{padding:7px 18px;border-radius:7px;border:none;font-family:'Inter',sans-serif;font-size:.8rem;cursor:pointer;font-weight:500;transition:all .2s}
+.modal-btn.primary{background:var(--purple);color:#fff}
+.modal-btn.primary:hover{filter:brightness(1.15)}
+.modal-btn.secondary{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
+.modal-btn.secondary:hover{color:var(--t2);border-color:var(--bd2)}
+
+.color-row{display:flex;gap:.5rem;flex-wrap:wrap}
+.color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.color-swatch:hover{transform:scale(1.2)}
+.color-swatch.sel{border-color:var(--t1)}
+</style>
+</head>
+<body>
+<div style="height:3px"></div>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1 class="hub-title">J人时刻</h1>
+    <p class="hub-sub">My Projects</p>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+    <button class="new-btn" onclick="openNewModal()">+ 新建项目</button>
+  </div>
+</header>
+
+<div class="section-hd">项目</div>
+<div class="project-grid" id="projectGrid"></div>
+
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div id="newModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeNewModal()">
+  <div class="modal-box">
+    <div class="modal-title">新建项目</div>
+    <div class="modal-field">
+      <label class="modal-label">项目名称</label>
+      <input type="text" id="newName" class="modal-input" placeholder="e.g. Language Learning" maxlength="40">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">颜色</label>
+      <div class="color-row" id="colorRow"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeNewModal()">取消</button>
+      <button class="modal-btn primary" onclick="submitNewModal()">创建并进入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HUB_KEY = 'jhub_projects_v1';
+const PALETTE = ['#9b8ec4','#7ab8a8','#d8b870','#80c4a0','#d4a0b8','#78c4e0'];
+let projects = [];
+let selectedColor = PALETTE[0];
+
+function loadProjects(){
+  const raw = localStorage.getItem(HUB_KEY);
+  projects = raw ? JSON.parse(raw) : [];
+  if(!projects.find(p => p.id === 'bocconi')){
+    projects.unshift({id:'bocconi', name:'Bocconi Final', created:'2026-04-21', color:'#9b8ec4'});
+    saveProjects();
+  }
+}
+function saveProjects(){localStorage.setItem(HUB_KEY, JSON.stringify(projects));}
+
+function fmtDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+}
+
+function renderGrid(){
+  const el = document.getElementById('projectGrid');
+  if(!projects.length){el.innerHTML='<div class="empty-state">暂无项目</div>';return;}
+  el.innerHTML = projects.map(p => {
+    const isLocked = p.id === 'bocconi';
+    return '<div class="proj-card" onclick="openProject(\''+p.id+'\')">'
+      + '<div class="proj-accent" style="background:'+p.color+'"></div>'
+      + '<div class="proj-name">'+escHtml(p.name)+'</div>'
+      + '<div class="proj-meta">创建于 '+fmtDate(p.created)+'</div>'
+      + '<button class="proj-del'+(isLocked?' locked':'')
+      + '" onclick="event.stopPropagation();deleteProject(\''+p.id+'\')" title="删除">&#10005;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function openProject(id){location.href='dashboard.html?project='+id;}
+
+function deleteProject(id){
+  if(id === 'bocconi'){alert('Bocconi Final 项目不可删除。');return;}
+  const p = projects.find(x => x.id === id);
+  if(!p)return;
+  if(!confirm('删除项目"'+p.name+'"？所有数据将永久清除。'))return;
+  ['_plan_v7','_scratch_v1','_cats_v1','_evts_v1','_hidden_evts_v1','_last_saved'].forEach(suffix=>{
+    localStorage.removeItem(id + suffix);
+  });
+  projects = projects.filter(x => x.id !== id);
+  saveProjects();
+  renderGrid();
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ─── NEW PROJECT MODAL ────────────────────────────────────────────────────────
+function openNewModal(){
+  document.getElementById('newName').value = '';
+  selectedColor = PALETTE[projects.length % PALETTE.length];
+  renderColorRow();
+  document.getElementById('newModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('newName').focus(), 50);
+}
+function closeNewModal(){document.getElementById('newModal').style.display = 'none';}
+function renderColorRow(){
+  document.getElementById('colorRow').innerHTML = PALETTE.map(c =>
+    '<div class="color-swatch'+(c===selectedColor?' sel':'')+'" style="background:'+c+'" onclick="selectColor(\''+c+'\')"></div>'
+  ).join('');
+}
+function selectColor(c){selectedColor=c;renderColorRow();}
+function submitNewModal(){
+  const name = document.getElementById('newName').value.trim();
+  if(!name){document.getElementById('newName').focus();return;}
+  const id = 'proj_' + Date.now();
+  const today = new Date();
+  const created = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  projects.push({id, name, created, color: selectedColor});
+  saveProjects();
+  closeNewModal();
+  location.href = 'dashboard.html?project=' + id;
+}
+document.getElementById('newName').addEventListener('keydown', e=>{if(e.key==='Enter')submitNewModal();});
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function initTheme(){
+  if(localStorage.getItem('bocconi_theme')==='light'){
+    document.documentElement.classList.add('light');
+    document.getElementById('themeBtn').textContent='☾ Dark';
+  }
+}
+function toggleTheme(){
+  const on = document.documentElement.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = on ? '☾ Dark' : '☀ Light';
+  localStorage.setItem('bocconi_theme', on ? 'light' : 'dark');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+initTheme();
+loadProjects();
+renderGrid();
+</script>
+</body>
+</html>
