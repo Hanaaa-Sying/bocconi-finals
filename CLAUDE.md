@@ -47,6 +47,68 @@ All state lives in JavaScript variables, persisted via two mechanisms:
 
 ---
 
+## daily.html — 每日主线任务
+
+### 设计意图
+
+用户给自己发明的一套任务+奖励机制：每个任务有一个"完成后的 reward"，reward 往往就是当下最想逃避去做的事（比如想用来拖延任务的那件事）。完成任务后 reward 进入"兑奖池"，随时可以兑现。这个机制的核心是：把"逃避的冲动"变成可以合法兑现的奖励，而不是无限制的拖延。
+
+这不是一个项目管理工具，而是一个**当日执行追踪 + 自我激励**工具。
+
+### 入口与定位
+
+`daily.html` 是 J人时刻 hub（`index.html`）顶部的**固定入口**，不是可创建/删除的项目类型。之所以不做成项目，是因为每天一条记录，做成项目会让 hub 首页迅速被塞满。URL 固定为 `daily.html?project=daily`。
+
+### 三栏布局的设计逻辑
+
+| 左列 | 中列 | 右列 |
+|---|---|---|
+| 昨天（只读） | 今天（可添加/完成） | 明天（可计划） |
+
+- 用户习惯在**前一天晚上**规划第二天，所以右列允许添加任务
+- 右列上限是明天，**不能规划后天**——防止过度计划导致焦虑
+- 顶部箭头可回溯历史（往前无限，往后最多到今天为中列）
+
+### 数据结构
+
+```javascript
+// localStorage keys（projectId = 'daily'）
+DAYS_KEY        = 'daily_days_v1'
+REWARDS_KEY     = 'daily_rewards_v1'
+LINKED_META_KEY = 'daily_linked_meta_v1'
+
+// days 格式
+{ "2026-05-19": [{id, text, ddl, notes, reward, done}], ... }
+
+// rewards 格式（全局跨天积累）
+[{id, text, redeemed, date, taskId, taskText}]
+
+// linkedMeta 格式（联动任务的本地 DDL/reward）
+{ "projectId:taskId:date": {ddl, reward} }
+```
+
+文件持久化层：`daily-data.json`，写入 `{days, rewards, linkedMeta, savedAt}`，句柄存 IndexedDB `jhub_daily_fsh`。
+
+### 联动任务（来自其他项目）
+
+每列底部自动显示 hub 中其他项目（如 Bocconi Final）当天的计划任务。
+
+- **勾选**同步写回源项目的 `<pid>_plan_v7`（双向同步）
+- **点击正文**可为联动任务单独设置 DDL 和 reward，存入 `linked_meta_v1`，**不回写源项目**——因为 DDL/reward 是用户在每日维度额外加的，与源项目的学习计划语义不同
+- 明天列的联动任务禁用勾选（防误操作）
+
+### 关键函数
+
+- `renderAll()` — 渲染三列 + 兑奖池
+- `renderTimeline(iso, containerId)` — 渲染单列时间流（个人任务 + 联动任务）
+- `getLinkedTasks(date)` — 读取所有其他项目当天的任务
+- `toggleLinkedTask(pid, taskId, date, isDone)` — 同步勾选状态回源项目
+- `completeTask(iso, id)` — 完成任务，reward 自动进奖池
+- `openEditModal(iso, id)` — 编辑未完成的个人任务
+- `openLinkedEditModal(pid, taskId, date)` — 设置联动任务的本地 DDL/reward
+
+---
+
 ## After every code change
 
 **Step 1 — prepend a log entry to `D:\BocconiFinals\log.md`** (newest first, right after the `---` separator at the top):
