@@ -1,5 +1,11 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 每日主线任务改为固定入口
+- index.html：每日主线任务改为 hub 顶部固定卡片（不再是可创建的项目类型），点击直达 daily.html?project=daily
+- 移除新建项目弹窗中的模板选择（新项目统一用 Study Dashboard 模板）
+- daily.html：标题固定为"每日主线任务"
+- 修改文件：index.html、daily.html
+
 ## 2026-05-19 — 新增 Daily Routine 项目模板
 - 新建 daily.html：垂直时间流 + 任务卡片（DDL/内容/reward）+ 兑奖池（完成任务 → reward 进入奖池 → 随时兑现）
 - 更新 index.html：新建项目弹窗加模板选择（Study Dashboard / Daily Routine），openProject 按模板路由到正确 HTML

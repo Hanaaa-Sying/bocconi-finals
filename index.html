@@ -78,12 +78,14 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
 .color-swatch:hover{transform:scale(1.2)}
 .color-swatch.sel{border-color:var(--t1)}
-.tpl-row{display:flex;gap:.5rem}
-.tpl-btn{flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--t3);font-size:.75rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;text-align:center;line-height:1.3}
-.tpl-btn:hover{border-color:var(--bd2);color:var(--t2)}
-.tpl-btn.sel{border-color:var(--purple);color:var(--purple);background:rgba(155,142,196,.08)}
-.tpl-name{font-weight:500;display:block}
-.tpl-desc{font-size:.65rem;opacity:.7;margin-top:2px;display:block}
+.daily-entry{display:flex;align-items:center;gap:1rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:1.1rem 1.4rem;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;margin-bottom:.5rem}
+.daily-entry:hover{border-color:var(--teal);background:var(--bg3);transform:translateY(-1px)}
+.daily-accent{width:3px;height:36px;border-radius:2px;background:linear-gradient(180deg,var(--purple),var(--teal));flex-shrink:0}
+.daily-body{flex:1}
+.daily-title{font-family:'Crimson Pro',serif;font-size:1.2rem;color:var(--t1)}
+.daily-sub{font-size:.65rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:.1rem}
+.daily-arrow{font-size:1.1rem;color:var(--t3);transition:color .2s,transform .2s}
+.daily-entry:hover .daily-arrow{color:var(--teal);transform:translateX(3px)}
 </style>
 </head>
 <body>
@@ -101,7 +103,17 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </header>
 
-<div class="section-hd">项目</div>
+<div class="section-hd">每日</div>
+<div class="daily-entry" onclick="location.href='daily.html?project=daily'">
+  <div class="daily-accent"></div>
+  <div class="daily-body">
+    <div class="daily-title">每日主线任务</div>
+    <div class="daily-sub">时间流 · 奖励兑换</div>
+  </div>
+  <div class="daily-arrow">→</div>
+</div>
+
+<div class="section-hd" style="margin-top:2rem">项目</div>
 <div class="project-grid" id="projectGrid"></div>
 
 </div>
@@ -113,10 +125,6 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     <div class="modal-field">
       <label class="modal-label">项目名称</label>
       <input type="text" id="newName" class="modal-input" placeholder="e.g. Language Learning" maxlength="40">
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">模板类型</label>
-      <div class="tpl-row" id="tplRow"></div>
     </div>
     <div class="modal-field">
       <label class="modal-label">颜色</label>
@@ -134,7 +142,6 @@ const HUB_KEY = 'jhub_projects_v1';
 const PALETTE = ['#9b8ec4','#7ab8a8','#d8b870','#80c4a0','#d4a0b8','#78c4e0'];
 let projects = [];
 let selectedColor = PALETTE[0];
-let selectedTpl = 'dash';
 
 function loadProjects(){
   const raw = localStorage.getItem(HUB_KEY);
@@ -156,22 +163,17 @@ function renderGrid(){
   if(!projects.length){el.innerHTML='<div class="empty-state">暂无项目</div>';return;}
   el.innerHTML = projects.map(p => {
     const isLocked = p.id === 'bocconi';
-    const tplTag = p.template === 'daily' ? ' · Daily Routine' : ' · Study Dashboard';
     return '<div class="proj-card" onclick="openProject(\''+p.id+'\')">'
       + '<div class="proj-accent" style="background:'+p.color+'"></div>'
       + '<div class="proj-name">'+escHtml(p.name)+'</div>'
-      + '<div class="proj-meta">创建于 '+fmtDate(p.created)+tplTag+'</div>'
+      + '<div class="proj-meta">创建于 '+fmtDate(p.created)+'</div>'
       + '<button class="proj-del'+(isLocked?' locked':'')
       + '" onclick="event.stopPropagation();deleteProject(\''+p.id+'\')" title="删除">&#10005;</button>'
       + '</div>';
   }).join('');
 }
 
-function openProject(id){
-  const p = projects.find(x => x.id === id);
-  const tpl = (p && p.template === 'daily') ? 'daily.html' : 'dashboard.html';
-  location.href = tpl + '?project=' + id;
-}
+function openProject(id){location.href='dashboard.html?project='+id;}
 
 function deleteProject(id){
   if(id === 'bocconi'){alert('Bocconi Final 项目不可删除。');return;}
@@ -192,25 +194,11 @@ function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 function openNewModal(){
   document.getElementById('newName').value = '';
   selectedColor = PALETTE[projects.length % PALETTE.length];
-  selectedTpl = 'dash';
-  renderTplRow();
   renderColorRow();
   document.getElementById('newModal').style.display = 'flex';
   setTimeout(()=>document.getElementById('newName').focus(), 50);
 }
 function closeNewModal(){document.getElementById('newModal').style.display = 'none';}
-function renderTplRow(){
-  document.getElementById('tplRow').innerHTML =
-    '<button class="tpl-btn'+(selectedTpl==='dash'?' sel':'')+'" onclick="selectTpl(\'dash\')">'
-    + '<span class="tpl-name">Study Dashboard</span>'
-    + '<span class="tpl-desc">任务计划 · 日历 · 待办</span>'
-    + '</button>'
-    + '<button class="tpl-btn'+(selectedTpl==='daily'?' sel':'')+'" onclick="selectTpl(\'daily\')">'
-    + '<span class="tpl-name">Daily Routine</span>'
-    + '<span class="tpl-desc">时间流 · 奖励机制</span>'
-    + '</button>';
-}
-function selectTpl(t){selectedTpl=t;renderTplRow();}
 function renderColorRow(){
   document.getElementById('colorRow').innerHTML = PALETTE.map(c =>
     '<div class="color-swatch'+(c===selectedColor?' sel':'')+'" style="background:'+c+'" onclick="selectColor(\''+c+'\')"></div>'
@@ -223,11 +211,10 @@ function submitNewModal(){
   const id = 'proj_' + Date.now();
   const today = new Date();
   const created = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  projects.push({id, name, created, color: selectedColor, template: selectedTpl});
+  projects.push({id, name, created, color: selectedColor});
   saveProjects();
   closeNewModal();
-  const tplFile = selectedTpl === 'daily' ? 'daily.html' : 'dashboard.html';
-  location.href = tplFile + '?project=' + id;
+  location.href = 'dashboard.html?project=' + id;
 }
 document.getElementById('newName').addEventListener('keydown', e=>{if(e.key==='Enter')submitNewModal();});
 

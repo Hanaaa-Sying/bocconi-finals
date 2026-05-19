@@ -185,11 +185,8 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 // ─── PROJECT ─────────────────────────────────────────────────────────────────
 const projectId = new URLSearchParams(location.search).get('project');
 if (!projectId) { location.replace('index.html'); throw 0; }
-const _hub = JSON.parse(localStorage.getItem('jhub_projects_v1') || '[]');
-const _meta = _hub.find(p => p.id === projectId) || {};
-const projectName = _meta.name || projectId;
-document.title = projectName;
-document.getElementById('projName').textContent = projectName;
+document.title = '每日主线任务';
+document.getElementById('projName').textContent = '每日主线任务';
 
 // ─── STORAGE ─────────────────────────────────────────────────────────────────
 const DAYS_KEY    = projectId + '_days_v1';
