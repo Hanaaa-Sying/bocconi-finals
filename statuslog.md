@@ -1,5 +1,12 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 删除有效学习时间功能
+- 移除 scoreboardPanel HTML、Log Study Session modal、Manage Study Methods modal
+- 删除相关 CSS（score-card、eff-preview、method-row 等全部样式）
+- 删除 studyLog、studyMethods 变量及全部相关函数（renderScoreboard、fmtMins 等）
+- 清理 refreshAll、toggleTheme、updateCatColor 等处的残留调用
+- 修改文件：dashboard.html、statuslog.md
+
 ## 2026-05-19 — 重构 May 20–28 复习计划（SNO + Sociology 三阶段）
 
 - 将 May 20–28 的 SNO 和 Sociology 任务全部替换为三阶段结构：Phase 1 过课件+思维导图（5/20–5/24）、Phase 2 背诵（5/25）、Phase 3 模拟题（5/26–5/27）

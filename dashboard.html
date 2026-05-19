@@ -220,39 +220,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .modal-btn.secondary{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
 .modal-btn.secondary:hover{color:var(--t2);border-color:var(--bd2)}
 
-@media(max-width:960px){.topgrid{grid-template-columns:1fr}.cal-wrap{grid-template-columns:1fr}.score-viz{flex-direction:column}}
-/* EFFECTIVE STUDY SCOREBOARD */
-.score-card{padding:14px 16px;margin-bottom:10px}
-.score-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.score-title{font-family:'Crimson Pro',serif;font-size:1rem;color:var(--t1)}
-.score-stats{display:flex;gap:24px;margin-bottom:14px}
-.score-stat{display:flex;flex-direction:column}
-.score-val{font-size:1.4rem;font-weight:600;color:var(--purple)}
-.score-lbl{font-size:.7rem;color:var(--t3);margin-top:2px}
-.score-viz{display:flex;gap:20px}
-.score-chart-wrap{flex:1.2;min-width:0}
-.score-chart-label{font-size:.65rem;color:var(--t3);margin-bottom:4px}
-.score-chart{display:flex;align-items:flex-end;gap:4px;height:72px}
-.score-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;height:100%}
-.score-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end}
-.score-bar{width:100%;background:var(--purple);border-radius:3px 3px 0 0;opacity:.75;min-height:2px}
-.score-bar.today{opacity:1;box-shadow:0 0 8px rgba(155,142,196,.5)}
-.score-bar-val{font-size:.58rem;color:var(--t2);margin-bottom:2px;min-height:10px}
-.score-bar-lbl{font-size:.58rem;color:var(--t3);margin-top:2px}
-.score-courses{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
-.score-course-row{display:flex;align-items:center;gap:6px}
-.score-course-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.score-course-name{font-size:.7rem;color:var(--t2);width:60px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.score-course-bar-wrap{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
-.score-course-bar{height:100%;border-radius:3px}
-.score-course-val{font-size:.65rem;color:var(--t3);width:36px;text-align:right;flex-shrink:0}
-.eff-preview{font-size:.8rem;color:var(--teal);margin-top:6px;min-height:18px}
-.methods-list{max-height:320px;overflow-y:auto;margin-bottom:.75rem}
-.method-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
-.method-row .modal-input{flex:1}
-.method-weight-input{width:72px!important;flex-shrink:0}
-.method-del-btn{background:none;border:none;color:var(--t3);cursor:pointer;font-size:1.1rem;padding:2px 5px;border-radius:4px;transition:color .15s;flex-shrink:0}
-.method-del-btn:hover{color:var(--exam)}
+@media(max-width:960px){.topgrid{grid-template-columns:1fr}.cal-wrap{grid-template-columns:1fr}}
 /* FILE STORAGE */
 .fs-btn{font-size:.67rem;color:var(--t3);cursor:pointer;padding:4px 10px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;letter-spacing:.03em;transition:all .2s;white-space:nowrap;display:none}
 .fs-btn:hover{border-color:var(--bd2);color:var(--t2)}
@@ -318,32 +286,6 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
-<div id="scoreboardPanel" class="card score-card">
-  <div class="score-header">
-    <span class="score-title">有效学习 · Effective Study</span>
-    <div style="display:flex;gap:6px">
-      <button class="manage-btn" onclick="openMethodsModal()">管理方式</button>
-      <button class="manage-btn" onclick="openLogModal()">+ 记录</button>
-    </div>
-  </div>
-  <div class="score-stats">
-    <div class="score-stat">
-      <span class="score-val" id="scoreToday">0h 0m</span>
-      <span class="score-lbl">今日有效时长</span>
-    </div>
-    <div class="score-stat">
-      <span class="score-val" id="scoreWeek">0h 0m</span>
-      <span class="score-lbl">本周有效时长</span>
-    </div>
-  </div>
-  <div class="score-viz">
-    <div class="score-chart-wrap">
-      <div class="score-chart-label">近 7 天</div>
-      <div class="score-chart" id="scoreChart"></div>
-    </div>
-    <div class="score-courses" id="scoreCourses"></div>
-  </div>
-</div>
 
 <div class="card">
   <div class="plan-hd">
@@ -499,52 +441,6 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
-<!-- LOG STUDY SESSION MODAL -->
-<div id="logModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeLogModal()">
-  <div class="modal-box">
-    <div class="modal-title">记录学习 · Log Study Session</div>
-    <div class="modal-field">
-      <label class="modal-label">日期 Date</label>
-      <input type="date" id="logDate" class="modal-input">
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">科目 Course</label>
-      <select id="logCourse" class="modal-select"></select>
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">学习时长 Duration</label>
-      <div style="display:flex;gap:.5rem;align-items:center">
-        <input type="number" id="logHours" class="modal-input" min="0" max="24" step="1" placeholder="0" style="width:72px" oninput="updateEffPreview()">
-        <span style="color:var(--t3);font-size:.8rem">小时</span>
-        <input type="number" id="logMins" class="modal-input" min="0" max="59" step="5" placeholder="0" style="width:72px" oninput="updateEffPreview()">
-        <span style="color:var(--t3);font-size:.8rem">分钟</span>
-      </div>
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">学习方式 Method</label>
-      <select id="logMethod" class="modal-select" onchange="updateEffPreview()"></select>
-    </div>
-    <div class="eff-preview" id="effPreview"></div>
-    <div class="modal-actions">
-      <button class="modal-btn secondary" onclick="closeLogModal()">取消</button>
-      <button class="modal-btn primary" onclick="submitLogModal()">记录</button>
-    </div>
-  </div>
-</div>
-
-<!-- MANAGE STUDY METHODS MODAL -->
-<div id="methodsModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeMethodsModal()">
-  <div class="modal-box" style="width:440px;max-width:calc(100vw - 2rem)">
-    <div class="modal-title">管理学习方式</div>
-    <div style="font-size:.65rem;color:var(--t3);margin-bottom:.75rem">权重 0.0 = 无效 &nbsp;·&nbsp; 1.0 = 最高效（基于 Dunlosky et al. 认知科学研究）</div>
-    <div class="methods-list" id="methodsList"></div>
-    <button class="add-task-btn" onclick="addMethodRow()" style="max-width:140px;margin-bottom:.75rem">+ 新增方式</button>
-    <div class="modal-actions">
-      <button class="modal-btn secondary" onclick="closeMethodsModal()">取消</button>
-      <button class="modal-btn primary" onclick="saveMethodsFromModal()">保存</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -788,27 +684,10 @@ const SCRATCH_KEY      = 'bocconi_scratch_v1';
 const CATEGORIES_KEY   = 'bocconi_cats_v1';
 const CUSTOM_EVENTS_KEY= 'bocconi_evts_v1';
 const HIDDEN_EVENTS_KEY= 'bocconi_hidden_evts_v1';
-const STUDY_LOG_KEY    = 'bocconi_studylog_v1';
-const STUDY_METHODS_KEY= 'bocconi_methods_v1';
-const DEFAULT_STUDY_METHODS=[
-  {key:'recall',     label:'主动回忆',       weight:1.00},
-  {key:'spaced',     label:'间隔重复 (Anki)',weight:0.90},
-  {key:'pastpapers', label:'真题练习',        weight:0.85},
-  {key:'problems',   label:'习题集 / 刷题',  weight:0.75},
-  {key:'feynman',    label:'费曼技巧',        weight:0.70},
-  {key:'mindmap',    label:'思维导图',        weight:0.60},
-  {key:'notes',      label:'整理笔记',        weight:0.50},
-  {key:'discussion', label:'小组讨论',        weight:0.50},
-  {key:'reading',    label:'主动阅读',        weight:0.35},
-  {key:'video',      label:'看视频 / 上课',  weight:0.25},
-  {key:'highlight',  label:'划重点 / 摘抄',  weight:0.15},
-];
 let planState    = {};
 let scratchItems = [];
 let categories   = [];
 let customEvents = [];
-let studyLog     = [];
-let studyMethods = [];
 let popupDate    = null;
 let currentTab   = 'dash';
 let activeTodoCourse = 'mc';
@@ -854,10 +733,6 @@ function scrollToToday(){
 }
 function saveScratch(){localStorage.setItem(SCRATCH_KEY,JSON.stringify(scratchItems));scheduleFsWrite();}
 function loadScratch(){const s=localStorage.getItem(SCRATCH_KEY);if(s)try{scratchItems=JSON.parse(s)}catch(e){scratchItems=[]}}
-function saveStudyLog(){localStorage.setItem(STUDY_LOG_KEY,JSON.stringify(studyLog));scheduleFsWrite();}
-function loadStudyLog(){const s=localStorage.getItem(STUDY_LOG_KEY);if(s)try{studyLog=JSON.parse(s);}catch(e){studyLog=[];}}
-function saveStudyMethods(){localStorage.setItem(STUDY_METHODS_KEY,JSON.stringify(studyMethods));scheduleFsWrite();}
-function loadStudyMethods(){const s=localStorage.getItem(STUDY_METHODS_KEY);if(s){try{studyMethods=JSON.parse(s);return;}catch(e){}}studyMethods=DEFAULT_STUDY_METHODS.map(m=>({...m}));}
 function loadHiddenEvents(){const s=localStorage.getItem(HIDDEN_EVENTS_KEY);if(s)try{hiddenEventIds=new Set(JSON.parse(s));}catch(e){hiddenEventIds=new Set();}}
 function saveHiddenEvents(){localStorage.setItem(HIDDEN_EVENTS_KEY,JSON.stringify([...hiddenEventIds]));scheduleFsWrite();}
 function deleteAnyEvent(id){
@@ -889,164 +764,10 @@ function refreshAll(){
   save();
   renderPlan();
   renderScratch();
-  renderScoreboard();
   if(popupDate)renderPopup(popupDate);
   if(currentTab==='todo')renderTodo();
 }
 
-// ─── EFFECTIVE STUDY SCOREBOARD ──────────────────────────────────────────────
-function fmtMins(m){const h=Math.floor(m/60),mn=Math.round(m%60);return h>0?(mn>0?h+'h '+mn+'m':h+'h'):(mn+'m')}
-function todayDs(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
-function getIsoWeek(ds){const d=new Date(ds+'T00:00:00');const day=d.getDay()||7;d.setDate(d.getDate()+4-day);const y=d.getFullYear();const w1=new Date(y,0,4);return y+'-W'+String(Math.ceil(((d-w1)/86400000+1)/7)).padStart(2,'0')}
-
-function renderScoreboard(){
-  const today=todayDs();
-  const thisWeek=getIsoWeek(today);
-  const todayMins=studyLog.filter(e=>e.date===today).reduce((s,e)=>s+e.effectiveMinutes,0);
-  const weekMins=studyLog.filter(e=>getIsoWeek(e.date)===thisWeek).reduce((s,e)=>s+e.effectiveMinutes,0);
-  const todayEl=document.getElementById('scoreToday');
-  const weekEl=document.getElementById('scoreWeek');
-  if(todayEl)todayEl.textContent=fmtMins(todayMins);
-  if(weekEl)weekEl.textContent=fmtMins(weekMins);
-
-  // 7-day bar chart
-  const chartEl=document.getElementById('scoreChart');
-  if(chartEl){
-    const days=[];
-    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));}
-    const dayMins=days.map(ds=>studyLog.filter(e=>e.date===ds).reduce((s,e)=>s+e.effectiveMinutes,0));
-    const maxM=Math.max(...dayMins,1);
-    let h='';
-    days.forEach((ds,i)=>{
-      const pct=Math.max(dayMins[i]/maxM*100,dayMins[i]>0?3:0);
-      const isToday=ds===today;
-      const lbl=(ds.slice(5,7)+'/'+ds.slice(8,10));
-      const valTxt=dayMins[i]>0?fmtMins(dayMins[i]):'';
-      h+='<div class="score-bar-col">';
-      h+='<div class="score-bar-val">'+valTxt+'</div>';
-      h+='<div class="score-bar-wrap"><div class="score-bar'+(isToday?' today':'')+'" style="height:'+pct+'%"></div></div>';
-      h+='<div class="score-bar-lbl">'+lbl+'</div>';
-      h+='</div>';
-    });
-    chartEl.innerHTML=h;
-  }
-
-  // course breakdown (this week)
-  const coursesEl=document.getElementById('scoreCourses');
-  if(coursesEl){
-    const weekEntries=studyLog.filter(e=>getIsoWeek(e.date)===thisWeek);
-    const courseMap={};
-    weekEntries.forEach(e=>{if(!courseMap[e.course])courseMap[e.course]=0;courseMap[e.course]+=e.effectiveMinutes;});
-    const sorted=Object.entries(courseMap).sort((a,b)=>b[1]-a[1]);
-    if(sorted.length===0){coursesEl.innerHTML='<div style="font-size:.7rem;color:var(--t3);padding:.5rem 0">本周暂无记录</div>';return;}
-    const maxC=sorted[0][1];
-    let h='';
-    sorted.forEach(([key,mins])=>{
-      const color=getCatColor(key);
-      const label=getCatLabel(key);
-      const pct=Math.round(mins/maxC*100);
-      h+='<div class="score-course-row">';
-      h+='<div class="score-course-dot" style="background:'+color+'"></div>';
-      h+='<div class="score-course-name">'+escHtml(label)+'</div>';
-      h+='<div class="score-course-bar-wrap"><div class="score-course-bar" style="width:'+pct+'%;background:'+color+'"></div></div>';
-      h+='<div class="score-course-val">'+fmtMins(mins)+'</div>';
-      h+='</div>';
-    });
-    coursesEl.innerHTML=h;
-  }
-}
-
-function openLogModal(){
-  const today=todayDs();
-  document.getElementById('logDate').value=today;
-  document.getElementById('logHours').value='';
-  document.getElementById('logMins').value='';
-  // populate course select
-  const cs=document.getElementById('logCourse');
-  cs.innerHTML=categories.map(c=>'<option value="'+c.key+'">'+escHtml(c.label)+'</option>').join('');
-  // populate method select
-  const ms=document.getElementById('logMethod');
-  ms.innerHTML=studyMethods.map(m=>'<option value="'+m.key+'">'+escHtml(m.label)+' × '+m.weight.toFixed(2)+'</option>').join('');
-  document.getElementById('effPreview').textContent='';
-  document.getElementById('logModal').style.display='flex';
-}
-function closeLogModal(){document.getElementById('logModal').style.display='none';}
-
-function updateEffPreview(){
-  const h=parseFloat(document.getElementById('logHours').value)||0;
-  const m=parseFloat(document.getElementById('logMins').value)||0;
-  const totalMins=h*60+m;
-  const methodEl=document.getElementById('logMethod');
-  const key=methodEl.value;
-  const method=studyMethods.find(x=>x.key===key);
-  const weight=method?method.weight:0;
-  const effMins=Math.round(totalMins*weight);
-  const prev=document.getElementById('effPreview');
-  if(totalMins>0&&method)prev.textContent='有效时长：'+fmtMins(effMins)+'（'+totalMins+'min × '+weight.toFixed(2)+' = '+effMins+'min）';
-  else prev.textContent='';
-}
-
-function submitLogModal(){
-  const date=document.getElementById('logDate').value;
-  const course=document.getElementById('logCourse').value;
-  const h=parseFloat(document.getElementById('logHours').value)||0;
-  const m=parseFloat(document.getElementById('logMins').value)||0;
-  const minutes=Math.round(h*60+m);
-  const methodKey=document.getElementById('logMethod').value;
-  const method=studyMethods.find(x=>x.key===methodKey);
-  if(!date||!course||minutes<=0||!method)return;
-  const effectiveMinutes=Math.round(minutes*method.weight);
-  studyLog.push({id:Date.now().toString(),date,course,method:methodKey,minutes,effectiveMinutes});
-  saveStudyLog();
-  renderScoreboard();
-  closeLogModal();
-}
-
-function openMethodsModal(){
-  renderMethodsList();
-  document.getElementById('methodsModal').style.display='flex';
-}
-function closeMethodsModal(){document.getElementById('methodsModal').style.display='none';}
-
-function renderMethodsList(){
-  const el=document.getElementById('methodsList');
-  let h='';
-  studyMethods.forEach((m,i)=>{
-    h+='<div class="method-row" data-idx="'+i+'">';
-    h+='<input type="text" class="modal-input" value="'+escHtml(m.label)+'" placeholder="方式名称">';
-    h+='<input type="number" class="modal-input method-weight-input" value="'+m.weight.toFixed(2)+'" min="0.01" max="1" step="0.05" placeholder="权重">';
-    h+='<button class="method-del-btn" onclick="deleteMethodRow('+i+')">×</button>';
-    h+='</div>';
-  });
-  el.innerHTML=h;
-}
-
-function deleteMethodRow(idx){
-  studyMethods.splice(idx,1);
-  renderMethodsList();
-}
-
-function addMethodRow(){
-  studyMethods.push({key:'custom_'+Date.now(),label:'',weight:0.50});
-  renderMethodsList();
-  const el=document.getElementById('methodsList');
-  el.scrollTop=el.scrollHeight;
-}
-
-function saveMethodsFromModal(){
-  const rows=document.querySelectorAll('#methodsList .method-row');
-  const updated=[];
-  rows.forEach((row,i)=>{
-    const inputs=row.querySelectorAll('input');
-    const label=inputs[0].value.trim();
-    const weight=Math.min(1,Math.max(0.01,parseFloat(inputs[1].value)||0.01));
-    if(label)updated.push({key:studyMethods[i]?studyMethods[i].key:'custom_'+Date.now()+i,label,weight});
-  });
-  studyMethods=updated;
-  saveStudyMethods();
-  renderScoreboard();
-  closeMethodsModal();
-}
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 function showTab(tab){
@@ -1195,7 +916,6 @@ function toggleTheme(){
   document.getElementById('themeBtn').textContent=on?'☾ Dark':'☀ Light';
   localStorage.setItem('bocconi_theme',on?'light':'dark');
   injectCategoryCSS();
-  renderScoreboard();
   renderLegend();
   renderEvList();
   if(currentTab==='todo')renderTodoContent();
@@ -1715,11 +1435,11 @@ function addCategory(){
 
 function updateCatColor(key,color){
   const c=categories.find(x=>x.key===key);
-  if(c){c.color=color;saveCategories();injectCategoryCSS();renderLegend();renderEvList();renderScoreboard();if(currentTab==='todo')renderTodoContent();}
+  if(c){c.color=color;saveCategories();injectCategoryCSS();renderLegend();renderEvList();if(currentTab==='todo')renderTodoContent();}
 }
 function updateCatColorLight(key,color){
   const c=categories.find(x=>x.key===key);
-  if(c){c.colorLight=color;saveCategories();injectCategoryCSS();renderLegend();renderEvList();renderScoreboard();if(currentTab==='todo')renderTodoContent();}
+  if(c){c.colorLight=color;saveCategories();injectCategoryCSS();renderLegend();renderEvList();if(currentTab==='todo')renderTodoContent();}
 }
 
 function deleteCategory(key){
@@ -1855,7 +1575,7 @@ async function _getFsHandle(){try{const db=await _openFsDb();return new Promise(
 async function _setFsHandle(h){try{const db=await _openFsDb();await new Promise(res=>{const tx=db.transaction(FS_STORE,'readwrite');tx.objectStore(FS_STORE).put(h,FS_KEY);tx.oncomplete=res;tx.onerror=res;});}catch(e){}}
 async function _clearFsHandle(){try{const db=await _openFsDb();await new Promise(res=>{const tx=db.transaction(FS_STORE,'readwrite');tx.objectStore(FS_STORE).delete(FS_KEY);tx.oncomplete=res;tx.onerror=res;});}catch(e){}}
 
-function _fsAllData(){return{plan:planState,scratch:scratchItems,categories,customEvents,hiddenEvents:[...hiddenEventIds],studyLog,studyMethods,theme:localStorage.getItem('bocconi_theme')||'dark',v:1,savedAt:new Date().toISOString()};}
+function _fsAllData(){return{plan:planState,scratch:scratchItems,categories,customEvents,hiddenEvents:[...hiddenEventIds],theme:localStorage.getItem('bocconi_theme')||'dark',v:1,savedAt:new Date().toISOString()};}
 
 async function _fsWrite(){
   if(!fileHandle)return;
@@ -1892,8 +1612,6 @@ function _applyFileData(data){
   if(data.categories&&data.categories.length)categories=data.categories;
   if(data.customEvents)customEvents=data.customEvents;
   if(data.hiddenEvents)hiddenEventIds=new Set(data.hiddenEvents);
-  if(data.studyLog)studyLog=data.studyLog;
-  if(data.studyMethods&&data.studyMethods.length)studyMethods=data.studyMethods;
   if(data.theme)localStorage.setItem('bocconi_theme',data.theme);
 }
 
@@ -2004,8 +1722,6 @@ async function onReconnectClick(){
   loadHiddenEvents();
   initState();
   loadScratch();
-  loadStudyLog();
-  loadStudyMethods();
   if(window.showSaveFilePicker){
     const fromFile=await fsInitHandle();
     if(fromFile){
@@ -2018,7 +1734,6 @@ async function onReconnectClick(){
   injectCategoryCSS();
   renderPlan();
   renderScratch();
-  renderScoreboard();
   renderCal(2026,3,'calApr');
   renderCal(2026,4,'calMay');
   renderEvList();
