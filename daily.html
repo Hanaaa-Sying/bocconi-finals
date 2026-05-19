@@ -131,6 +131,19 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .modal-btn.secondary{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
 .modal-btn.secondary:hover{color:var(--t2);border-color:var(--bd2)}
 
+/* REDEEM CHAT */
+.chat-reward-tag{font-size:.72rem;color:var(--gold);background:rgba(216,184,112,.08);border:1px solid rgba(216,184,112,.22);border-radius:6px;padding:.3rem .65rem;margin-bottom:.7rem}
+.chat-history{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:.45rem;margin-bottom:.55rem;padding-right:.1rem}
+.chat-msg{max-width:88%;padding:.42rem .65rem;border-radius:10px;font-size:.77rem;line-height:1.45;word-break:break-word}
+.chat-msg.assistant{background:var(--bg4);color:var(--t1);align-self:flex-start;border-bottom-left-radius:3px}
+.chat-msg.user{background:var(--purple);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.chat-typing{display:flex;gap:4px;padding:.3rem .2rem;align-items:center;align-self:flex-start}
+.chat-typing-dot{width:5px;height:5px;border-radius:50%;background:var(--t3);animation:tdot 1.2s infinite}
+.chat-typing-dot:nth-child(2){animation-delay:.2s}.chat-typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.chat-input-row{display:flex;gap:.4rem;margin-bottom:.5rem}
+.api-key-note{font-size:.7rem;color:var(--t2);background:var(--bg4);border-radius:8px;padding:.6rem .75rem;line-height:1.6}
+
 /* LINKED TASKS (from other projects) */
 .linked-section{margin-top:.75rem;padding-top:.65rem;border-top:1px dashed var(--bd)}
 .linked-hd{font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.45rem}
@@ -254,6 +267,38 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeLinkedModal()">取消</button>
       <button class="modal-btn primary" onclick="submitLinkedEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- REDEEM CHAT MODAL -->
+<div id="redeemModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeRedeemModal()">
+  <div class="modal-box" style="width:450px">
+    <div class="modal-title" style="margin-bottom:.5rem">回味时刻</div>
+    <div class="chat-reward-tag">🎁 <span id="redeemRewardLbl"></span></div>
+    <div id="apiKeySection" style="display:none">
+      <div class="api-key-note">
+        要启用 AI 聊天，请输入你的 Anthropic API Key（仅存本地，不会上传）
+        <input type="password" id="apiKeyInput" class="modal-input" placeholder="sk-ant-api03-…" style="margin-top:.45rem">
+        <div style="display:flex;justify-content:flex-end;gap:.4rem;margin-top:.45rem">
+          <button class="modal-btn secondary" onclick="redeemSkipAI()">直接兑现</button>
+          <button class="modal-btn primary" onclick="saveApiKey()">保存并开始</button>
+        </div>
+      </div>
+    </div>
+    <div id="chatSection" style="display:none">
+      <div class="chat-history" id="chatHistory"></div>
+      <div class="chat-typing" id="chatTyping" style="display:none">
+        <span class="chat-typing-dot"></span><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" class="modal-input" placeholder="回复…" style="flex:1">
+        <button class="modal-btn primary" onclick="sendChatMsg()" style="padding:6px 14px;flex-shrink:0">→</button>
+      </div>
+      <div class="modal-actions" style="margin-top:.3rem">
+        <button class="modal-btn secondary" onclick="redeemSkipAI()">直接兑现</button>
+        <button class="modal-btn primary" id="saveRedeemBtn" onclick="saveAndRedeem()" disabled style="opacity:.45;cursor:default">记录并兑现</button>
+      </div>
     </div>
   </div>
 </div>
@@ -449,7 +494,7 @@ function renderPool(){
     +'<div class="reward-text">'+escHtml(r.text)+'</div>'
     +'<div class="reward-meta">'+escHtml(r.taskText)+' · '+r.date+'</div>'
     +'</div>'
-    +'<button class="redeem-btn" onclick="redeemReward(\''+r.id+'\')">兑现</button>'
+    +'<button class="redeem-btn" onclick="openRedeemModal(\''+r.id+'\')">兑现</button>'
     +'</div>'
   ).join('');
 }
@@ -522,10 +567,12 @@ function deleteTask(iso, id){
   saveDays();
   renderAll();
 }
-function redeemReward(id){
+function _markRedeemed(id, chat){
   const r=rewards.find(x=>x.id===id);
   if(!r)return;
   r.redeemed=true;
+  r.redeemedAt=new Date().toISOString();
+  if(chat&&chat.length) r.chat=chat;
   saveRewards();
   renderPool();
 }
@@ -623,6 +670,100 @@ function submitLinkedEdit(){
   renderAll();
 }
 document.getElementById('linkedReward').addEventListener('keydown',e=>{if(e.key==='Enter')submitLinkedEdit();});
+
+// ─── REDEEM CHAT ─────────────────────────────────────────────────────────────
+let _redeemId = null, _chatMsgs = [], _chatRewardText = '';
+
+function openRedeemModal(id){
+  const r=rewards.find(x=>x.id===id);
+  if(!r)return;
+  _redeemId=id; _chatMsgs=[]; _chatRewardText=r.text;
+  document.getElementById('redeemRewardLbl').textContent=r.text;
+  document.getElementById('chatHistory').innerHTML='';
+  document.getElementById('chatTyping').style.display='none';
+  document.getElementById('chatInput').value='';
+  const sb=document.getElementById('saveRedeemBtn');
+  sb.disabled=true;sb.style.opacity='.45';sb.style.cursor='default';
+  document.getElementById('redeemModal').style.display='flex';
+  if(localStorage.getItem('j_anthropic_key')){
+    document.getElementById('apiKeySection').style.display='none';
+    document.getElementById('chatSection').style.display='block';
+    _startChat();
+  } else {
+    document.getElementById('apiKeySection').style.display='block';
+    document.getElementById('chatSection').style.display='none';
+  }
+}
+function closeRedeemModal(){document.getElementById('redeemModal').style.display='none';}
+function redeemSkipAI(){_markRedeemed(_redeemId,null);closeRedeemModal();}
+function saveAndRedeem(){_markRedeemed(_redeemId,_chatMsgs);closeRedeemModal();}
+
+function saveApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k)return;
+  localStorage.setItem('j_anthropic_key',k);
+  document.getElementById('apiKeySection').style.display='none';
+  document.getElementById('chatSection').style.display='block';
+  _startChat();
+}
+
+async function _startChat(){
+  document.getElementById('chatTyping').style.display='flex';
+  const reply=await _callClaude([{role:'user',content:'（开始）'}]);
+  document.getElementById('chatTyping').style.display='none';
+  if(reply)_appendChatMsg('assistant',reply);
+  setTimeout(()=>document.getElementById('chatInput').focus(),50);
+}
+
+async function sendChatMsg(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';
+  _appendChatMsg('user',text);
+  const sb=document.getElementById('saveRedeemBtn');
+  sb.disabled=false;sb.style.opacity='1';sb.style.cursor='pointer';
+  document.getElementById('chatTyping').style.display='flex';
+  const reply=await _callClaude(_chatMsgs);
+  document.getElementById('chatTyping').style.display='none';
+  if(reply)_appendChatMsg('assistant',reply);
+  document.getElementById('chatInput').focus();
+}
+
+function _appendChatMsg(role,text){
+  const el=document.getElementById('chatHistory');
+  const div=document.createElement('div');
+  div.className='chat-msg '+role;
+  div.textContent=text;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+  _chatMsgs.push({role,content:text});
+}
+
+async function _callClaude(messages){
+  const key=localStorage.getItem('j_anthropic_key');
+  if(!key)return null;
+  const system=`你是用户的私人日记小助手。用户完成任务后兑现了奖励：「${_chatRewardText}」。
+用中文，以轻松朋友式的语气帮用户回味这段体验。根据奖励内容问有针对性的问题：吃饭→问味道/地点/同伴；休闲娱乐→问感受/收获；以此类推。每次只说1-2句，简短自然，不重复已问过的问题。`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:150,system,messages})
+    });
+    if(!res.ok){
+      if(res.status===401){_appendChatMsg('assistant','（API Key 无效，请刷新页面重新输入）');localStorage.removeItem('j_anthropic_key');}
+      else _appendChatMsg('assistant','（请求失败 '+res.status+'，可跳过直接兑现）');
+      return null;
+    }
+    const data=await res.json();
+    return data.content[0].text;
+  }catch(e){
+    _appendChatMsg('assistant','（网络错误，可跳过直接兑现）');
+    return null;
+  }
+}
+document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChatMsg();});
 
 // ─── FILE SYSTEM PERSISTENCE ─────────────────────────────────────────────────
 const LAST_SAVED_KEY = projectId + '_last_saved';

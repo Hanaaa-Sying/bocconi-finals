@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-05-19 — 兑奖池新增 AI 回味聊天功能
+
+**Prompt:** 兑现 reward 太快没有回味感，希望 AI 根据 reward 内容问问题，像朋友聊天一样，并记录下来
+**Files:** `daily.html`
+- 点"兑现"→ 打开"回味时刻" modal，Claude Haiku 根据 reward 内容自动发起对话（吃饭问味道/同伴，休闲问感受等）
+- 用户回复后可"记录并兑现"保存聊天记录到 reward 对象，或"直接兑现"跳过
+- API Key 首次输入后存入 localStorage，支持 401 时自动清除并提示重新输入
+- 模型：`claude-haiku-4-5-20251001`，直接浏览器调用，需 `anthropic-dangerous-direct-browser-access` header
+
+---
+
 ## 2026-05-19 — 修复联动任务勾选后 reward 不入池
 
 **Prompt:** 勾选今天的任务后兑奖池没有出现奖励
