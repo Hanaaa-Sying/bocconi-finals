@@ -1,5 +1,12 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 重构 May 20–28 复习计划（SNO + Sociology 三阶段）
+
+- 将 May 20–28 的 SNO 和 Sociology 任务全部替换为三阶段结构：Phase 1 过课件+思维导图（5/20–5/24）、Phase 2 背诵（5/25）、Phase 3 模拟题（5/26–5/27）
+- SNO 覆盖全部 L1–L21（20 讲），Sociology 覆盖 L1–L15（15 讲）；May 22（IELTS 考试日）减负只各留 1 任务
+- PLAN_KEY 升至 v7，迁移逻辑保留 May 20 前已完成状态，May 20 起从新 DEFAULT_PLAN 重建
+- 文件：`dashboard.html`、`dashboard-data.json`
+
 ## 2026-05-19 — 修复"开启文件保存"覆盖已有数据的问题
 - `onFsBtnClick()` 选中已有文件时先读内容，有有效数据则加载而非覆盖，防止跨 origin 切换后数据丢失
 - 文件：`dashboard.html`
