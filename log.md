@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-05-19 — 每日主线任务新增文件保存层（防数据丢失）
+
+**Prompt:** 担心每日主线任务像之前 Bocconi Final 那样因 localStorage 被清除而丢失数据
+**Files:** `daily.html`
+- 头部新增"开启文件保存"按钮，用户选择本地 `daily-data.json` 写入持久化
+- 每次 save 触发 `scheduleFsWrite()`（debounced 800ms）写入 days + rewards + linkedMeta
+- 页面加载时通过 IndexedDB 恢复文件句柄，优先从文件读取数据
+- 句柄失效（文件被移动）时按钮变为"⚠ 重新连接"，引导用户重选文件
+
+---
+
 ## 2026-05-19 — 任务正文可点击编辑；联动任务可设置本地 DDL & Reward
 
 **Prompt:** 点击任务正文进入编辑界面（可修改 DDL/reward）；联动任务也能设置自己的 DDL 和 reward，但不回写到源项目

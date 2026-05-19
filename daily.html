@@ -42,6 +42,8 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 #clock{font-family:'Crimson Pro',serif;font-size:1.9rem;color:var(--purple);letter-spacing:.06em;line-height:1}
 .theme-toggle{font-size:.68rem;color:var(--t3);cursor:pointer;padding:3px 9px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;transition:all .2s;display:inline-block}
 .theme-toggle:hover{border-color:var(--bd2);color:var(--t2)}
+.fs-btn{font-size:.65rem;cursor:pointer;padding:3px 9px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;transition:all .2s;color:var(--t3);display:none}
+.fs-btn:hover{border-color:var(--bd2);color:var(--t2)}
 
 /* NAV ROW */
 .nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
@@ -161,7 +163,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
   <div class="header-right">
     <div id="clock">--:--:--</div>
-    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <button class="fs-btn" id="fsBtn" onclick="onFsBtnClick()">开启文件保存</button>
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+    </div>
   </div>
 </header>
 
@@ -275,9 +280,9 @@ function load(){
   const lm = localStorage.getItem(LINKED_META_KEY);
   linkedMeta = lm ? JSON.parse(lm) : {};
 }
-function saveDays(){localStorage.setItem(DAYS_KEY, JSON.stringify(days));}
-function saveRewards(){localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards));}
-function saveLinkedMeta(){localStorage.setItem(LINKED_META_KEY, JSON.stringify(linkedMeta));}
+function saveDays(){localStorage.setItem(DAYS_KEY, JSON.stringify(days));scheduleFsWrite();}
+function saveRewards(){localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards));scheduleFsWrite();}
+function saveLinkedMeta(){localStorage.setItem(LINKED_META_KEY, JSON.stringify(linkedMeta));scheduleFsWrite();}
 
 // ─── DATE HELPERS ─────────────────────────────────────────────────────────────
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -604,6 +609,102 @@ function submitLinkedEdit(){
 }
 document.getElementById('linkedReward').addEventListener('keydown',e=>{if(e.key==='Enter')submitLinkedEdit();});
 
+// ─── FILE SYSTEM PERSISTENCE ─────────────────────────────────────────────────
+const LAST_SAVED_KEY = projectId + '_last_saved';
+const FS_DB = 'jhub_'+projectId+'_fsh', FS_STORE = 'h', FS_KEY_IDB = 'd';
+let _fsHandle = null, _fsTimer = null;
+
+function _idbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(FS_DB,1);
+    r.onupgradeneeded=e=>e.target.result.createObjectStore(FS_STORE);
+    r.onsuccess=e=>res(e.target.result);r.onerror=rej;
+  });
+}
+async function _idbGet(){const db=await _idbOpen();return new Promise(res=>{db.transaction(FS_STORE).objectStore(FS_STORE).get(FS_KEY_IDB).onsuccess=e=>res(e.target.result);});}
+async function _idbSet(v){const db=await _idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FS_STORE,'readwrite');tx.objectStore(FS_STORE).put(v,FS_KEY_IDB).onsuccess=res;tx.onerror=rej;});}
+async function _idbDel(){const db=await _idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(FS_STORE,'readwrite');tx.objectStore(FS_STORE).delete(FS_KEY_IDB).onsuccess=res;tx.onerror=rej;});}
+
+function _fsAllData(){return {days,rewards,linkedMeta,savedAt:new Date().toISOString()};}
+
+async function _fsWrite(){
+  if(!_fsHandle)return;
+  try{
+    const w=await _fsHandle.createWritable();
+    await w.write(JSON.stringify(_fsAllData(),null,2));
+    await w.close();
+    localStorage.setItem(LAST_SAVED_KEY,new Date().toISOString());
+  }catch(e){
+    if(e.name==='NotFoundError'){await _clearFsHandle();}
+  }
+}
+function scheduleFsWrite(){clearTimeout(_fsTimer);_fsTimer=setTimeout(_fsWrite,800);}
+
+async function _clearFsHandle(){_fsHandle=null;await _idbDel();_setFsBtn('reconnect');}
+
+function _setFsBtn(state){
+  const btn=document.getElementById('fsBtn');
+  btn.style.display='inline-block';
+  if(state==='on'){btn.textContent='✓ 文件保存中';btn.style.color='var(--teal)';}
+  else if(state==='reconnect'){btn.textContent='⚠ 重新连接';btn.style.color='var(--exam)';}
+  else{btn.textContent='开启文件保存';btn.style.color='';}
+}
+
+function _applyData(data){
+  if(data.days)days=data.days;
+  if(data.rewards)rewards=data.rewards;
+  if(data.linkedMeta)linkedMeta=data.linkedMeta;
+}
+
+async function onFsBtnClick(){
+  if(_fsHandle){await reloadFromPicker();return;}
+  try{
+    const handle=await window.showSaveFilePicker({
+      suggestedName:'daily-data.json',
+      types:[{description:'JSON',accept:{'application/json':['.json']}}]
+    });
+    try{
+      const file=await handle.getFile();const text=await file.text();
+      if(text.trim()){const data=JSON.parse(text);if(data.days||data.rewards){_applyData(data);saveDays();saveRewards();saveLinkedMeta();}}
+    }catch(e){}
+    _fsHandle=handle;await _idbSet(handle);_setFsBtn('on');_fsWrite();
+  }catch(e){if(e.name!=='AbortError')console.error(e);}
+}
+
+async function reloadFromPicker(){
+  try{
+    const [handle]=await window.showOpenFilePicker({types:[{description:'JSON',accept:{'application/json':['.json']}}]});
+    const file=await handle.getFile();const text=await file.text();
+    if(text.trim()){
+      const data=JSON.parse(text);
+      const fileSaved=data.savedAt?new Date(data.savedAt):null;
+      const lsSaved=localStorage.getItem(LAST_SAVED_KEY)?new Date(localStorage.getItem(LAST_SAVED_KEY)):null;
+      if(fileSaved&&lsSaved&&fileSaved<lsSaved){
+        if(!confirm('文件保存时间早于本地数据，继续会用文件覆盖。确定？'))return;
+      }
+      _applyData(data);saveDays();saveRewards();saveLinkedMeta();
+    }
+    _fsHandle=handle;await _idbSet(handle);_setFsBtn('on');renderAll();
+  }catch(e){if(e.name!=='AbortError')console.error(e);}
+}
+
+async function tryRestoreFromFile(){
+  try{
+    const handle=await _idbGet();
+    if(!handle)return false;
+    const file=await handle.getFile();
+    const text=await file.text();
+    if(!text.trim())return false;
+    const data=JSON.parse(text);
+    _applyData(data);
+    _fsHandle=handle;_setFsBtn('on');
+    return true;
+  }catch(e){
+    if(e.name==='NotFoundError')await _clearFsHandle();
+    return false;
+  }
+}
+
 // ─── THEME ───────────────────────────────────────────────────────────────────
 function initTheme(){
   if(localStorage.getItem('bocconi_theme')==='light'){
@@ -620,7 +721,8 @@ function toggleTheme(){
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initTheme();
 load();
-renderAll();
+_setFsBtn('off');
+tryRestoreFromFile().then(()=>renderAll());
 </script>
 </body>
 </html>
