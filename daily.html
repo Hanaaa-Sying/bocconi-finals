@@ -140,6 +140,12 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .linked-course{font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:1px}
 .linked-text{font-size:.72rem;color:var(--t2);line-height:1.3}
 .linked-item.done .linked-text{text-decoration:line-through;color:var(--t3)}
+.tl-task.editable{cursor:pointer}
+.tl-task.editable:hover{color:var(--purple);text-decoration:underline;text-decoration-style:dotted}
+.linked-body.editable{cursor:pointer}
+.linked-body.editable:hover .linked-text{color:var(--purple)}
+.linked-meta-ddl{font-size:.6rem;color:var(--t3);margin-top:.2rem}
+.linked-meta-reward{font-size:.6rem;color:var(--gold);margin-top:.1rem}
 
 @media(max-width:700px){.three-col{grid-template-columns:1fr}.col.is-past{display:none}}
 </style>
@@ -203,7 +209,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <!-- ADD TASK MODAL -->
 <div id="addModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-box">
-    <div class="modal-title">添加任务 <span class="modal-title-sub" id="modalDateLabel"></span></div>
+    <div class="modal-title" id="modalTitle">添加任务 <span class="modal-title-sub" id="modalDateLabel"></span></div>
     <div class="modal-field">
       <label class="modal-label">任务名称</label>
       <input type="text" id="addText" class="modal-input" placeholder="今天要做什么…" maxlength="120">
@@ -222,7 +228,27 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     </div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeAddModal()">取消</button>
-      <button class="modal-btn primary" onclick="submitAdd()">添加</button>
+      <button class="modal-btn primary" id="modalSubmitBtn" onclick="submitAdd()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- LINKED TASK EDIT MODAL -->
+<div id="linkedModal" style="display:none" class="modal-overlay" onclick="if(event.target===this)closeLinkedModal()">
+  <div class="modal-box">
+    <div class="modal-title">设置提醒 & Reward <span class="modal-title-sub" id="linkedModalSub"></span></div>
+    <div style="font-size:.72rem;color:var(--t2);background:var(--bg4);border-radius:7px;padding:.45rem .6rem;margin-bottom:.85rem;line-height:1.4" id="linkedModalTask"></div>
+    <div class="modal-field">
+      <label class="modal-label">DDL（可选，几点前完成）</label>
+      <input type="time" id="linkedDdl" class="modal-input">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">完成后的 Reward（可选）</label>
+      <input type="text" id="linkedReward" class="modal-input" placeholder="e.g. 去吃漂亮 brunch" maxlength="100">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeLinkedModal()">取消</button>
+      <button class="modal-btn primary" onclick="submitLinkedEdit()">保存</button>
     </div>
   </div>
 </div>
@@ -234,19 +260,24 @@ if (!projectId) { location.replace('index.html'); throw 0; }
 document.title = '每日主线任务';
 
 // ─── STORAGE ─────────────────────────────────────────────────────────────────
-const DAYS_KEY    = projectId + '_days_v1';
-const REWARDS_KEY = projectId + '_rewards_v1';
-let days    = {};
-let rewards = [];
+const DAYS_KEY        = projectId + '_days_v1';
+const REWARDS_KEY     = projectId + '_rewards_v1';
+const LINKED_META_KEY = projectId + '_linked_meta_v1';
+let days       = {};
+let rewards    = [];
+let linkedMeta = {};  // key: "pid:taskId:date" → {ddl, reward}
 
 function load(){
   const d = localStorage.getItem(DAYS_KEY);
   days = d ? JSON.parse(d) : {};
   const r = localStorage.getItem(REWARDS_KEY);
   rewards = r ? JSON.parse(r) : [];
+  const lm = localStorage.getItem(LINKED_META_KEY);
+  linkedMeta = lm ? JSON.parse(lm) : {};
 }
 function saveDays(){localStorage.setItem(DAYS_KEY, JSON.stringify(days));}
 function saveRewards(){localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards));}
+function saveLinkedMeta(){localStorage.setItem(LINKED_META_KEY, JSON.stringify(linkedMeta));}
 
 // ─── DATE HELPERS ─────────────────────────────────────────────────────────────
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -367,7 +398,7 @@ function renderTimeline(iso, containerId){
     return '<div class="'+cls+'">'
       +'<div class="tl-card">'
       +'<div class="tl-time">⏰ '+escHtml(t_.ddl)+' 前</div>'
-      +'<div class="tl-task">'+escHtml(t_.text)+'</div>'
+      +'<div class="tl-task'+(t_.done?'':' editable')+'"'+(t_.done?'':' onclick="openEditModal(\''+iso+'\',\''+t_.id+'\')"')+'>'+escHtml(t_.text)+'</div>'
       +(t_.notes?'<div class="tl-notes">'+escHtml(t_.notes)+'</div>':'')
       +'<div class="tl-reward"><span class="tl-reward-lbl">Reward </span>🎁 '+escHtml(t_.reward)+'</div>'
       +'<div class="tl-actions">'+actions+'</div>'
@@ -383,12 +414,16 @@ function renderTimeline(iso, containerId){
       // checkbox is interactive for today and past (can fix yesterday's forgotten tasks), read-only for future
       const disabled = (iso > t) ? ' disabled' : '';
       const onChange = disabled ? '' : ' onchange="toggleLinkedTask(\''+lk.projectId+'\',\''+lk.taskId+'\',\''+iso+'\',this.checked)"';
+      const metaKey_ = lk.projectId+':'+lk.taskId+':'+iso;
+      const meta_ = linkedMeta[metaKey_]||{};
       return '<div class="linked-item'+doneCls+'">'
         +'<input type="checkbox" class="linked-cb"'+checked+disabled+onChange+'>'
         +'<span class="linked-badge" style="background:'+lk.projectColor+'">'+escHtml(lk.projectName)+'</span>'
-        +'<div class="linked-body">'
+        +'<div class="linked-body editable" onclick="openLinkedEditModal(\''+lk.projectId+'\',\''+lk.taskId+'\',\''+iso+'\')">'
         +(lk.course?'<div class="linked-course" style="color:'+lk.projectColor+'">'+escHtml(lk.course)+'</div>':'')
         +'<div class="linked-text">'+escHtml(lk.text)+'</div>'
+        +(meta_.ddl?'<div class="linked-meta-ddl">⏰ '+escHtml(meta_.ddl)+' 前</div>':'')
+        +(meta_.reward?'<div class="linked-meta-reward">🎁 '+escHtml(meta_.reward)+'</div>':'')
         +'</div></div>';
     }).join('');
     html += '</div>';
@@ -475,16 +510,20 @@ function redeemReward(id){
   renderPool();
 }
 
-// ─── ADD MODAL ────────────────────────────────────────────────────────────────
+// ─── ADD / EDIT MODAL ────────────────────────────────────────────────────────
 let addTargetDate = null;
+let editMode = false;
+let editTargetId = null;
+
 function openAddModal(iso){
+  editMode = false; editTargetId = null;
   addTargetDate = iso;
-  const tm = tomorrow();
-  const t = today();
+  const tm = tomorrow(); const t = today();
   let lbl = fmtShort(iso)+' ('+fmtWday(iso).charAt(0)+fmtWday(iso).slice(1).toLowerCase()+')';
-  if(iso===t) lbl='今天';
-  else if(iso===tm) lbl='明天';
+  if(iso===t) lbl='今天'; else if(iso===tm) lbl='明天';
+  document.getElementById('modalTitle').childNodes[0].textContent = '添加任务 ';
   document.getElementById('modalDateLabel').textContent = lbl;
+  document.getElementById('modalSubmitBtn').textContent = '添加';
   document.getElementById('addText').value='';
   document.getElementById('addDdl').value='';
   document.getElementById('addNotes').value='';
@@ -492,7 +531,27 @@ function openAddModal(iso){
   document.getElementById('addModal').style.display='flex';
   setTimeout(()=>document.getElementById('addText').focus(),50);
 }
-function closeAddModal(){document.getElementById('addModal').style.display='none';}
+function openEditModal(iso, id){
+  const task = (days[iso]||[]).find(t=>t.id===id);
+  if(!task||task.done) return;
+  editMode = true; editTargetId = id; addTargetDate = iso;
+  const tm = tomorrow(); const t = today();
+  let lbl = fmtShort(iso)+' ('+fmtWday(iso).charAt(0)+fmtWday(iso).slice(1).toLowerCase()+')';
+  if(iso===t) lbl='今天'; else if(iso===tm) lbl='明天';
+  document.getElementById('modalTitle').childNodes[0].textContent = '编辑任务 ';
+  document.getElementById('modalDateLabel').textContent = lbl;
+  document.getElementById('modalSubmitBtn').textContent = '保存';
+  document.getElementById('addText').value = task.text;
+  document.getElementById('addDdl').value = task.ddl;
+  document.getElementById('addNotes').value = task.notes||'';
+  document.getElementById('addReward').value = task.reward;
+  document.getElementById('addModal').style.display='flex';
+  setTimeout(()=>document.getElementById('addText').focus(),50);
+}
+function closeAddModal(){
+  editMode = false; editTargetId = null;
+  document.getElementById('addModal').style.display='none';
+}
 function submitAdd(){
   const text=document.getElementById('addText').value.trim();
   const ddl=document.getElementById('addDdl').value;
@@ -501,14 +560,49 @@ function submitAdd(){
   if(!text){document.getElementById('addText').focus();return;}
   if(!ddl){document.getElementById('addDdl').focus();return;}
   if(!reward){document.getElementById('addReward').focus();return;}
-  if(!days[addTargetDate])days[addTargetDate]=[];
-  days[addTargetDate].push({id:'t_'+Date.now(),text,ddl,notes,reward,done:false});
+  if(editMode && editTargetId){
+    const task=(days[addTargetDate]||[]).find(t=>t.id===editTargetId);
+    if(task){task.text=text;task.ddl=ddl;task.notes=notes;task.reward=reward;}
+  } else {
+    if(!days[addTargetDate])days[addTargetDate]=[];
+    days[addTargetDate].push({id:'t_'+Date.now(),text,ddl,notes,reward,done:false});
+  }
   saveDays();
   closeAddModal();
   renderAll();
 }
 document.getElementById('addText').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&e.target===document.getElementById('addText'))document.getElementById('addDdl').focus();});
 document.getElementById('addReward').addEventListener('keydown',e=>{if(e.key==='Enter')submitAdd();});
+
+// ─── LINKED TASK META MODAL ───────────────────────────────────────────────────
+let linkedEditKey = null;
+function openLinkedEditModal(pid, taskId, date){
+  linkedEditKey = pid+':'+taskId+':'+date;
+  const meta = linkedMeta[linkedEditKey]||{};
+  const hub = JSON.parse(localStorage.getItem('jhub_projects_v1')||'[]');
+  const proj = hub.find(p=>p.id===pid)||{};
+  let taskText = taskId;
+  const raw = localStorage.getItem(pid+'_plan_v7');
+  if(raw){try{const plan=JSON.parse(raw);const ts=plan[date]||[];const tk=ts.find(t=>t.id===taskId);if(tk)taskText=tk.t;}catch(e){}}
+  document.getElementById('linkedModalSub').textContent = proj.name||pid;
+  document.getElementById('linkedModalTask').textContent = taskText;
+  document.getElementById('linkedDdl').value = meta.ddl||'';
+  document.getElementById('linkedReward').value = meta.reward||'';
+  document.getElementById('linkedModal').style.display='flex';
+  setTimeout(()=>document.getElementById('linkedDdl').focus(),50);
+}
+function closeLinkedModal(){linkedEditKey=null;document.getElementById('linkedModal').style.display='none';}
+function submitLinkedEdit(){
+  if(!linkedEditKey) return;
+  const ddl=document.getElementById('linkedDdl').value;
+  const reward=document.getElementById('linkedReward').value.trim();
+  if(ddl||reward){linkedMeta[linkedEditKey]={ddl,reward};}
+  else{delete linkedMeta[linkedEditKey];}
+  saveLinkedMeta();
+  closeLinkedModal();
+  renderAll();
+}
+document.getElementById('linkedReward').addEventListener('keydown',e=>{if(e.key==='Enter')submitLinkedEdit();});
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 function initTheme(){

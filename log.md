@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-05-19 — 任务正文可点击编辑；联动任务可设置本地 DDL & Reward
+
+**Prompt:** 点击任务正文进入编辑界面（可修改 DDL/reward）；联动任务也能设置自己的 DDL 和 reward，但不回写到源项目
+**Files:** `daily.html`
+- 个人任务（未完成）：点击任务名称文字打开编辑 modal，复用添加 modal 加 edit mode，支持修改全部字段
+- 联动任务：点击正文区域打开独立 modal，设置本地 DDL / reward，存入 `<pid>_linked_meta_v1`；设置后在联动任务卡片上显示
+- 新增：`openEditModal` / `openLinkedEditModal` / `submitLinkedEdit` / `saveLinkedMeta`
+
+---
+
 ## 2026-05-19 — 每日主线任务联动其他项目任务
 
 **Prompt:** 让每日主线任务的今天栏自动显示其他项目（如 Bocconi Final）当天的计划任务，勾选后双向同步
