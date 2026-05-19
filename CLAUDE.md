@@ -49,21 +49,24 @@ All state lives in JavaScript variables, persisted via two mechanisms:
 
 ## After every code change
 
-**Step 1 — append a log entry to `D:\BocconiFinals\statuslog.md`** in this format:
+**Step 1 — prepend a log entry to `D:\BocconiFinals\log.md`** (newest first, right after the `---` separator at the top):
 
 ```
 ## YYYY-MM-DD — <one-line summary>
-- <what changed and why>
-- <file(s) modified>
+
+**Prompt:** <one sentence: what the user asked for, or "(自发现)" if Claude spotted it unprompted>
+**Files:** `file1.html`, `file2.md`
+- <bullet: what changed and why>
+**Debug:** <symptom → root cause → fix> (omit this line if no debugging was needed)
 ```
 
-Use today's date. Keep entries short (2–4 bullets max).
+One entry = one complete feature or fix. If a feature took multiple conversation turns to implement, it still gets one entry. Use today's date.
 
 **Step 2 — commit and push to GitHub:**
 
 ```powershell
-git -C "D:\BocconiFinals" add dashboard.html statuslog.md CLAUDE.md index.html .gitignore
-git -C "D:\BocconiFinals" commit -m "<same one-line summary as statuslog>"
+git -C "D:\BocconiFinals" add dashboard.html log.md CLAUDE.md index.html daily.html .gitignore
+git -C "D:\BocconiFinals" commit -m "<same one-line summary as log entry>"
 git -C "D:\BocconiFinals" push origin main
 ```
 
