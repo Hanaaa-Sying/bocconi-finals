@@ -5,6 +5,14 @@
 
 ---
 
+## 🚧 OPEN BUG — AI 聊天 400 错误（待查）
+
+**现象：** 点"兑现"→ AI 聊天 modal → API 返回 400，无论从 `file://` 还是 `http://localhost:8080` 访问均失败
+**已排查：** messages 顺序问题已修复（以 user 开头）；API Key 有效；CORS header 已加
+**待查：** 实际 400 response body（F12 → Network → 找 api.anthropic.com 请求 → Response tab）；model ID `claude-haiku-4-5-20251001` 是否对该 key 可用
+
+---
+
 ## 2026-05-19 — 兑奖池新增 AI 回味聊天功能
 
 **Prompt:** 兑现 reward 太快没有回味感，希望 AI 根据 reward 内容问问题，像朋友聊天一样，并记录下来
