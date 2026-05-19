@@ -1,5 +1,11 @@
 # Dashboard Status Log
 
+## 2026-05-19 — 每日主线任务改为三栏布局
+- daily.html 重写为左中右三栏：左=前一天（只读），中=今天（可添加/完成），右=明天（可计划）
+- 顶部导航箭头回溯历史，往后最多到今天（center 列），右列始终是 center+1 天，最多明天
+- 兑奖池改为网格布局，reward card 更紧凑
+- 修改文件：daily.html
+
 ## 2026-05-19 — 每日主线任务改为固定入口
 - index.html：每日主线任务改为 hub 顶部固定卡片（不再是可创建的项目类型），点击直达 daily.html?project=daily
 - 移除新建项目弹窗中的模板选择（新项目统一用 Study Dashboard 模板）
