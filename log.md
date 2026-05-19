@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-05-19 — 修复联动任务勾选后 reward 不入池
+
+**Prompt:** 勾选今天的任务后兑奖池没有出现奖励
+**Files:** `daily.html`
+- `toggleLinkedTask` 补充 reward pool 同步：勾选时若 `linkedMeta` 有本地 reward 则入池，取消勾选则移除未兑现的 reward
+- 用 `_pid` 字段标记联动任务 reward 的来源项目，防止跨项目 id 碰撞
+
+**Debug:** 症状：勾选联动任务 checkbox 后兑奖池无变化 → 根因：`toggleLinkedTask` 只同步 done 状态到源项目，没有写 rewards 数组 → 修复：勾选时检查 linkedMeta，有 reward 则 push 入池
+
+---
+
 ## 2026-05-19 — 每日主线任务新增文件保存层（防数据丢失）
 
 **Prompt:** 担心每日主线任务像之前 Bocconi Final 那样因 localStorage 被清除而丢失数据

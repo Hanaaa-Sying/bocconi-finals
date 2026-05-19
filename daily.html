@@ -487,6 +487,21 @@ function toggleLinkedTask(pid, taskId, date, isDone){
   if(!task) return;
   task.done = isDone;
   localStorage.setItem(key, JSON.stringify(plan));
+
+  // Sync reward pool based on local meta
+  const metaKey = pid+':'+taskId+':'+date;
+  const meta = linkedMeta[metaKey]||{};
+  if(isDone && meta.reward){
+    const alreadyInPool = rewards.some(r=>r.taskId===taskId&&r.date===date&&r._pid===pid);
+    if(!alreadyInPool){
+      rewards.push({id:'r_'+Date.now(),text:meta.reward,taskText:task.t,date,taskId,_pid:pid,redeemed:false});
+      saveRewards();
+    }
+  } else if(!isDone){
+    const idx = rewards.findIndex(r=>r.taskId===taskId&&r.date===date&&r._pid===pid&&!r.redeemed);
+    if(idx>=0){rewards.splice(idx,1);saveRewards();}
+  }
+
   renderAll();
 }
 
