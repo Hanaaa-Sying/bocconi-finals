@@ -13,6 +13,13 @@
 
 ---
 
+## 2026-06-09 — daily.html 暂时隐藏兑奖池
+
+**Prompt:** 把兑奖池功能先隐藏不呈现，但保留代码，之后修改优化后再放回
+**Files:** `daily.html`
+- `.pool-section` 加 `style="display:none"`，整块兑奖池及 AI 回味聊天暂不展示
+- 渲染与奖励累积逻辑（`renderPool`、`completeTask`、联动勾选写入 `rewards`）全部保留，数据照常累积不丢失；恢复只需去掉该 `display:none`
+
 ## 2026-06-09 — 新增 merge.html 多项目合并视图
 
 **Prompt:** 回国后想把面板当个人多项目规划器，要一个 merge 按钮把各项目按不同颜色汇总到一张大日历
