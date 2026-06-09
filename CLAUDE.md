@@ -3,8 +3,8 @@
 ## What this project is
 
 Single-file study dashboard for Bocconi Spring 2026 finals.
-- **Project root:** `D:\1mylife\vibecoding\bocconifinals\`
-- **Main file:** `D:\1mylife\vibecoding\bocconifinals\dashboard.html` (all HTML/CSS/JS in one file, no build step)
+- **Project root:** `D:\1mylife\vibecoding\J人时刻\`
+- **Main file:** `D:\1mylife\vibecoding\J人时刻\dashboard.html` (all HTML/CSS/JS in one file, no build step)
 - **User:** Bocconi student, communicates in Chinese and English, comfortable with HTML/CSS/JS
 - **Courses:** LLM · SNO · MC · Sociology · IELTS
 
@@ -112,7 +112,7 @@ LINKED_META_KEY = 'daily_linked_meta_v1'
 
 ## After every code change
 
-**Step 1 — prepend a log entry to `D:\1mylife\vibecoding\bocconifinals\log.md`** (newest first, right after the `---` separator at the top):
+**Step 1 — prepend a log entry to `D:\1mylife\vibecoding\J人时刻\log.md`** (newest first, right after the `---` separator at the top):
 
 ```
 ## YYYY-MM-DD — <one-line summary>
@@ -128,9 +128,9 @@ One entry = one complete feature or fix. If a feature took multiple conversation
 **Step 2 — commit and push to GitHub:**
 
 ```powershell
-git -C "D:\1mylife\vibecoding\bocconifinals" add dashboard.html log.md CLAUDE.md index.html daily.html merge.html gcal.js .gitignore
-git -C "D:\1mylife\vibecoding\bocconifinals" commit -m "<same one-line summary as log entry>"
-git -C "D:\1mylife\vibecoding\bocconifinals" push origin main
+git -C "D:\1mylife\vibecoding\J人时刻" add dashboard.html log.md CLAUDE.md index.html daily.html merge.html gcal.js .gitignore
+git -C "D:\1mylife\vibecoding\J人时刻" commit -m "<same one-line summary as log entry>"
+git -C "D:\1mylife\vibecoding\J人时刻" push origin main
 ```
 
 Only stage the files listed above — never stage `dashboard-data.json` (personal data). Do not skip this step.
