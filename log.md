@@ -21,6 +21,7 @@
 - dashboard 日历卡片加「⟳ Google」按钮 → `gcalSync()`：PUSH 本项目事件为全天事件（标题 `[项目名] label`，描述带 `jhub:<pid>:<eventId>` 标记，按项目色上色），已删除事件同步删除；PULL 把 Google 上被改了日期的（仅自定义事件）写回本地
 - 映射存 `<pid>_gcal_map_v1`（dashboardEventId ↔ gcalEventId）；仅在 https（Pages）下可用，file:// 给出提示
 - 对「单文件」约定的一处有意偏离：OAuth 代码抽成外部 `gcal.js` 以便 dashboard/merge 共用
+- 内置默认 Client ID（受 OAuth origin 限制只能从 Pages 网址发起，非机密），用户点按钮即用，无需粘贴
 
 ## 2026-06-09 — daily.html 暂时隐藏兑奖池
 

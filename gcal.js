@@ -2,10 +2,11 @@
 // Pure client-side via Google Identity Services token client — no backend, works on https origin.
 (function(global){
   const CLIENT_ID_KEY='jhub_gcal_client_id';
+  const DEFAULT_CLIENT_ID='286116672684-6lji9cau89o4vu3ohh116m1sa9bbejch.apps.googleusercontent.com';
   const SCOPE='https://www.googleapis.com/auth/calendar.events';
   let accessToken=null, tokenExp=0;
 
-  function getClientId(){return localStorage.getItem(CLIENT_ID_KEY)||'';}
+  function getClientId(){return localStorage.getItem(CLIENT_ID_KEY)||DEFAULT_CLIENT_ID;}
   function setClientId(id){localStorage.setItem(CLIENT_ID_KEY,(id||'').trim());}
   function configured(){return !!getClientId();}
 
