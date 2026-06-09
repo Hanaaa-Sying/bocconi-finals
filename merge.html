@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合并视图 · All Projects</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#09091a;--bg2:#101022;--bg3:#161630;--bg4:#1c1c3a;
+  --t1:#ede8f5;--t2:#a898c0;--t3:#5e5475;
+  --purple:#9b8ec4;--teal:#7ab8a8;
+  --bd:rgba(155,142,196,0.14);--bd2:rgba(155,142,196,0.3);--r:12px;
+  --pause-bg:rgba(120,196,224,0.10);
+  --exam:#d87080;--deadline:#d8b870;--pres:#80c4a0;
+}
+:root.light{
+  --bg1:#f0f4f0;--bg2:#e6ede6;--bg3:#dae6da;--bg4:#cddccd;
+  --t1:#1c2e24;--t2:#3d6650;--t3:#7a9e85;
+  --purple:#6b4226;--teal:#4a8c7c;
+  --bd:rgba(40,90,60,.16);--bd2:rgba(40,90,60,.32);
+  --pause-bg:rgba(74,140,124,0.12);
+  --exam:#963850;--deadline:#9c7a1e;--pres:#3d7a5c;
+}
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+body{background:var(--bg1);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.5;user-select:none}
+h1,h2,h3{font-family:'Crimson Pro',serif;font-weight:400}
+body::before{content:'';display:block;height:3px;background:linear-gradient(90deg,#b09cd8,#9b8ec4,#7ab8a8);position:fixed;top:0;left:0;right:0;z-index:200}
+
+.wrap{max-width:1100px;margin:0 auto;padding:2.5rem 2rem}
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2rem;padding-bottom:1.4rem;border-bottom:1px solid var(--bd)}
+.hub-title{font-size:2.4rem;letter-spacing:.03em;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hub-sub{color:var(--t3);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-top:.25rem}
+.header-actions{display:flex;gap:.6rem;align-items:center}
+.lnk-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--t2);font-family:'Inter',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;text-decoration:none}
+.lnk-btn:hover{border-color:var(--bd2);color:var(--t1);background:var(--bg3)}
+.theme-toggle{font-size:.72rem;color:var(--t3);cursor:pointer;padding:4px 10px;border:1px solid var(--bd);border-radius:20px;background:transparent;font-family:'Inter',sans-serif;transition:all .2s}
+.theme-toggle:hover{border-color:var(--bd2);color:var(--t2)}
+
+.mgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.mgrid{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem}
+.card-title{font-family:'Crimson Pro',serif;font-size:1.1rem;color:var(--t2);margin-bottom:1rem;letter-spacing:.04em}
+
+.cal-nav{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.85rem}
+.cal-nav-btn{width:26px;height:26px;border:1px solid var(--bd);border-radius:6px;background:transparent;color:var(--t2);cursor:pointer;font-size:.9rem;line-height:1;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.cal-nav-btn:hover{border-color:var(--bd2);color:var(--t1);background:var(--bg3)}
+.cal-nav-today{padding:0 11px;height:26px;border:1px solid var(--bd);border-radius:6px;background:transparent;color:var(--t3);cursor:pointer;font-size:.68rem;font-family:'Inter',sans-serif;letter-spacing:.06em;transition:all .2s}
+.cal-nav-today:hover{border-color:var(--bd2);color:var(--t1)}
+.cal-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:560px){.cal-wrap{grid-template-columns:1fr}}
+.cal-month h3{font-size:.88rem;color:var(--t2);text-align:center;margin-bottom:.65rem;letter-spacing:.06em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dh{text-align:center;font-size:.6rem;color:var(--t3);padding:3px 0;letter-spacing:.04em}
+.cal-d{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:5px;font-size:.75rem;color:var(--t2);position:relative;transition:background .15s;cursor:pointer}
+.cal-d:hover:not(.empty){background:var(--bg4)}
+.cal-d.today{background:var(--bg4);color:var(--purple);font-weight:600;box-shadow:0 0 0 1.5px var(--purple)}
+.cal-d.past{color:var(--t3)}
+.cal-d.has-ev{color:var(--t1)}
+.cal-d.sel{box-shadow:0 0 0 1.5px var(--teal)}
+.cal-d.empty{cursor:default}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:30px;margin-top:2px}
+.mdot{width:5px;height:5px;border-radius:50%}
+
+.legend{display:flex;flex-direction:column;gap:.5rem;margin-top:1.3rem}
+.lg{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--t2)}
+.lg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lg-meta{font-size:.62rem;color:var(--t3);margin-left:auto}
+
+.detail-empty{color:var(--t3);font-size:.82rem;text-align:center;padding:2.5rem 0}
+.detail-date{font-family:'Crimson Pro',serif;font-size:1.25rem;color:var(--t1);margin-bottom:1rem}
+.dgroup{margin-bottom:1.1rem}
+.dgroup-hd{display:flex;align-items:center;gap:.45rem;font-size:.82rem;color:var(--t1);margin-bottom:.5rem;cursor:pointer;text-decoration:none}
+.dgroup-hd:hover{color:var(--teal)}
+.dgroup-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dgroup-arrow{font-size:.7rem;color:var(--t3);margin-left:auto}
+.ditem{display:flex;align-items:flex-start;gap:.5rem;font-size:.76rem;color:var(--t2);padding:.3rem 0 .3rem .85rem;line-height:1.4}
+.ditem.done{color:var(--t3);text-decoration:line-through}
+.dbadge{flex-shrink:0;font-size:.58rem;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:4px;margin-top:1px}
+.dbadge.exam{background:rgba(216,112,128,.18);color:var(--exam)}
+.dbadge.deadline{background:rgba(216,184,112,.18);color:var(--deadline)}
+.dbadge.pres{background:rgba(128,196,160,.18);color:var(--pres)}
+.dbadge.task{background:var(--bg4);color:var(--t3)}
+.empty-state{text-align:center;padding:4rem 0;color:var(--t3);font-size:.85rem}
+</style>
+</head>
+<body>
+<div style="height:3px"></div>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1 class="hub-title">合并视图</h1>
+    <p class="hub-sub">All Projects · Unified Calendar</p>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+    <a class="lnk-btn" href="index.html">← 返回 Hub</a>
+  </div>
+</header>
+
+<div id="emptyHost"></div>
+
+<div class="mgrid" id="mainGrid">
+  <div class="card">
+    <div class="card-title">日历</div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calShift(-1)" title="上一月">&#8249;</button>
+      <button class="cal-nav-today" onclick="calToday()">今天</button>
+      <button class="cal-nav-btn" onclick="calShift(1)" title="下一月">&#8250;</button>
+    </div>
+    <div class="cal-wrap">
+      <div id="calA"></div>
+      <div id="calB"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">当日详情</div>
+    <div id="detail"><div class="detail-empty">点击日历上的某一天<br>查看跨项目的事件与任务</div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const HUB_KEY='jhub_projects_v1';
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const BOCCONI_EVENTS=[
+  {date:'2026-04-23',type:'pause',label:'Venice Break'},
+  {date:'2026-04-24',type:'pause',label:'Venice Break'},
+  {date:'2026-04-25',type:'pause',label:'Venice Break'},
+  {date:'2026-04-26',type:'pause',label:'Venice Break'},
+  {date:'2026-05-02',type:'deadline',label:'MC PPT Slides 80% Ready'},
+  {date:'2026-05-07',type:'pres',label:'LLM Final Project Presentation'},
+  {date:'2026-05-09',type:'deadline',label:'SNO (Advanto) Upload Deadline — 11:59pm'},
+  {date:'2026-05-10',type:'deadline',label:'MC Group Project Upload (before midnight)'},
+  {date:'2026-05-11',type:'pres',label:'MC Group Project Presentations'},
+  {date:'2026-05-12',type:'pres',label:'SNO (Advanto) Presentation'},
+  {date:'2026-05-12',type:'pres',label:'MC Group Presentations'},
+  {date:'2026-05-15',type:'exam',label:'LLM Final Exam'},
+  {date:'2026-05-19',type:'exam',label:'MC Final Exam @ 11:30'},
+  {date:'2026-05-22',type:'exam',label:'IELTS Exam'},
+  {date:'2026-05-27',type:'exam',label:'SNO Final Exam'},
+  {date:'2026-05-28',type:'exam',label:'Sociology Final Exam'},
+];
+
+let projects=[];
+let byDate={};       // ds -> [{pid,name,color,kind,type,label,done}]
+let selectedDate=null;
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toDs(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function ls(key,fallback){try{const r=localStorage.getItem(key);return r?JSON.parse(r):fallback;}catch(e){return fallback;}}
+
+function loadProjects(){
+  projects=ls(HUB_KEY,[]);
+  if(!projects.find(p=>p.id==='bocconi')){
+    projects.unshift({id:'bocconi',name:'Bocconi Final',created:'2026-04-21',color:'#9b8ec4'});
+  }
+}
+
+function projEvents(pid){
+  let base=(pid==='bocconi')?BOCCONI_EVENTS.map((e,i)=>({...e,id:'bev_'+i})):[];
+  const custom=ls(pid+'_evts_v1',[]);
+  const hidden=new Set(ls(pid+'_hidden_evts_v1',[]));
+  return base.concat(custom).filter(e=>!hidden.has(e.id));
+}
+
+function buildAggregate(){
+  byDate={};
+  projects.forEach(p=>{
+    projEvents(p.id).forEach(e=>{
+      if(e.type==='pause')return;
+      (byDate[e.date]=byDate[e.date]||[]).push({pid:p.id,name:p.name,color:p.color,kind:'event',type:e.type,label:e.label});
+    });
+    const plan=ls(p.id+'_plan_v7',{});
+    Object.keys(plan).forEach(ds=>{
+      (plan[ds]||[]).forEach(t=>{
+        (byDate[ds]=byDate[ds]||[]).push({pid:p.id,name:p.name,color:p.color,kind:'task',label:t.t,done:!!t.done});
+      });
+    });
+  });
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────────────────────
+let calBaseDate=(function(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1);})();
+
+function renderCal(year,month,cid){
+  const ts=toDs(new Date());
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const startDow=new Date(year,month,1).getDay();
+  let h='<div class="cal-month"><h3>'+MONTHS[month]+' '+year+'</h3><div class="cal-grid">';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>h+='<div class="cal-dh">'+d+'</div>');
+  for(let i=0;i<startDow;i++)h+='<div class="cal-d empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const items=byDate[ds]||[];
+    let cls='cal-d';
+    if(ds===ts)cls+=' today';else if(ds<ts)cls+=' past';else if(items.length)cls+=' has-ev';
+    if(ds===selectedDate)cls+=' sel';
+    h+='<div class="'+cls+'" data-date="'+ds+'" onclick="selectDay(\''+ds+'\')"><span>'+d+'</span>';
+    if(items.length){
+      const colors=[];
+      items.forEach(it=>{if(!colors.includes(it.color))colors.push(it.color);});
+      h+='<div class="dots">'+colors.slice(0,6).map(c=>'<div class="mdot" style="background:'+c+'"></div>').join('')+'</div>';
+    }
+    h+='</div>';
+  }
+  h+='</div></div>';
+  document.getElementById(cid).innerHTML=h;
+}
+
+function renderCalendars(){
+  const y=calBaseDate.getFullYear(),m=calBaseDate.getMonth();
+  const nd=new Date(y,m+1,1);
+  renderCal(y,m,'calA');
+  renderCal(nd.getFullYear(),nd.getMonth(),'calB');
+}
+function calShift(delta){calBaseDate=new Date(calBaseDate.getFullYear(),calBaseDate.getMonth()+delta,1);renderCalendars();}
+function calToday(){const n=new Date();calBaseDate=new Date(n.getFullYear(),n.getMonth(),1);renderCalendars();}
+
+function renderLegend(){
+  const el=document.getElementById('legend');
+  const counts={};
+  Object.values(byDate).forEach(arr=>arr.forEach(it=>{counts[it.pid]=(counts[it.pid]||0)+1;}));
+  el.innerHTML=projects.map(p=>{
+    const n=counts[p.id]||0;
+    return '<div class="lg"><div class="lg-dot" style="background:'+p.color+'"></div>'+escHtml(p.name)+'<span class="lg-meta">'+n+' 项</span></div>';
+  }).join('');
+}
+
+function selectDay(ds){
+  selectedDate=ds;
+  renderCalendars();
+  renderDetail();
+}
+
+function renderDetail(){
+  const el=document.getElementById('detail');
+  if(!selectedDate){el.innerHTML='<div class="detail-empty">点击日历上的某一天<br>查看跨项目的事件与任务</div>';return;}
+  const d=new Date(selectedDate+'T00:00:00');
+  const label=MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+  const items=byDate[selectedDate]||[];
+  let h='<div class="detail-date">'+label+'</div>';
+  if(!items.length){h+='<div class="detail-empty">这天没有任何项目的安排</div>';el.innerHTML=h;return;}
+  const byProj={};
+  items.forEach(it=>{(byProj[it.pid]=byProj[it.pid]||[]).push(it);});
+  projects.forEach(p=>{
+    const arr=byProj[p.id];if(!arr)return;
+    h+='<div class="dgroup"><a class="dgroup-hd" href="dashboard.html?project='+p.id+'"><div class="dgroup-dot" style="background:'+p.color+'"></div>'+escHtml(p.name)+'<span class="dgroup-arrow">进入 →</span></a>';
+    arr.filter(it=>it.kind==='event').forEach(it=>{
+      h+='<div class="ditem"><span class="dbadge '+it.type+'">'+(it.type==='exam'?'Exam':it.type==='deadline'?'DDL':'Pres')+'</span>'+escHtml(it.label)+'</div>';
+    });
+    arr.filter(it=>it.kind==='task').forEach(it=>{
+      h+='<div class="ditem'+(it.done?' done':'')+'"><span class="dbadge task">Task</span>'+escHtml(it.label)+'</div>';
+    });
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+function initTheme(){
+  if(localStorage.getItem('bocconi_theme')==='light'){
+    document.documentElement.classList.add('light');
+    document.getElementById('themeBtn').textContent='☾ Dark';
+  }
+}
+function toggleTheme(){
+  const on=document.documentElement.classList.toggle('light');
+  document.getElementById('themeBtn').textContent=on?'☾ Dark':'☀ Light';
+  localStorage.setItem('bocconi_theme',on?'light':'dark');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+initTheme();
+loadProjects();
+buildAggregate();
+if(!projects.length){
+  document.getElementById('mainGrid').style.display='none';
+  document.getElementById('emptyHost').innerHTML='<div class="empty-state">暂无项目。先去 Hub 新建一个项目吧。</div>';
+}else{
+  renderCalendars();
+  renderLegend();
+  renderDetail();
+}
+</script>
+</body>
+</html>

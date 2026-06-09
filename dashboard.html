@@ -65,6 +65,11 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .card-title-left::before{content:'';display:block;width:3px;height:14px;background:var(--purple);border-radius:2px;flex-shrink:0}
 
 /* CALENDAR */
+.cal-nav{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.85rem}
+.cal-nav-btn{width:26px;height:26px;border:1px solid var(--bd);border-radius:6px;background:transparent;color:var(--t2);cursor:pointer;font-size:.9rem;line-height:1;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.cal-nav-btn:hover{border-color:var(--bd2);color:var(--t1);background:var(--bg3)}
+.cal-nav-today{padding:0 11px;height:26px;border:1px solid var(--bd);border-radius:6px;background:transparent;color:var(--t3);cursor:pointer;font-size:.68rem;font-family:'Inter',sans-serif;letter-spacing:.06em;transition:all .2s}
+.cal-nav-today:hover{border-color:var(--bd2);color:var(--t1)}
 .cal-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
 .cal-month h3{font-size:.88rem;color:var(--t2);text-align:center;margin-bottom:.65rem;letter-spacing:.06em}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
@@ -268,6 +273,11 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     <div class="card-title">
       <div class="card-title-left">Exam Calendar</div>
       <button class="manage-btn" onclick="openAddEventModal()">+ Event</button>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calShift(-1)" title="上一月">&#8249;</button>
+      <button class="cal-nav-today" onclick="calToday()">今天</button>
+      <button class="cal-nav-btn" onclick="calShift(1)" title="下一月">&#8250;</button>
     </div>
     <div class="cal-wrap">
       <div id="calApr"></div>
@@ -937,6 +947,22 @@ function toggleTheme(){
 setInterval(updateClock,1000);updateClock();
 
 // ─── CALENDAR ────────────────────────────────────────────────────────────────
+let calBaseDate = IS_BOCCONI ? new Date(2026,3,1) : (function(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1);})();
+function renderCalendars(){
+  const y=calBaseDate.getFullYear(),m=calBaseDate.getMonth();
+  const nd=new Date(y,m+1,1);
+  renderCal(y,m,'calApr');
+  renderCal(nd.getFullYear(),nd.getMonth(),'calMay');
+}
+function calShift(delta){
+  calBaseDate=new Date(calBaseDate.getFullYear(),calBaseDate.getMonth()+delta,1);
+  renderCalendars();
+}
+function calToday(){
+  const n=new Date();
+  calBaseDate=new Date(n.getFullYear(),n.getMonth(),1);
+  renderCalendars();
+}
 function renderCal(year,month,cid){
   const ts=toDs(new Date());
   const daysInMonth=new Date(year,month+1,0).getDate();
@@ -999,8 +1025,7 @@ function renderLegend(){
 }
 
 function refreshCalendar(){
-  renderCal(2026,3,'calApr');
-  renderCal(2026,4,'calMay');
+  renderCalendars();
   renderEvList();
   renderLegend();
   updateClock();
@@ -1683,7 +1708,7 @@ function _applyAndRefresh(){
   _setFsBtn('ok','● 已自动保存');
   injectCategoryCSS();
   refreshAll();
-  renderCal(2026,3,'calApr');renderCal(2026,4,'calMay');renderEvList();renderLegend();
+  renderCalendars();renderEvList();renderLegend();
 }
 
 async function reloadFromPicker(){
@@ -1748,16 +1773,7 @@ async function onReconnectClick(){
   injectCategoryCSS();
   renderPlan();
   renderScratch();
-  if(IS_BOCCONI){
-    renderCal(2026,3,'calApr');
-    renderCal(2026,4,'calMay');
-  }else{
-    const _now=new Date();
-    const _y=_now.getFullYear(),_m=_now.getMonth();
-    const _nd=new Date(_y,_m+1,1);
-    renderCal(_y,_m,'calApr');
-    renderCal(_nd.getFullYear(),_nd.getMonth(),'calMay');
-  }
+  renderCalendars();
   renderEvList();
   renderLegend();
 })();

@@ -13,6 +13,24 @@
 
 ---
 
+## 2026-06-09 — 新增 merge.html 多项目合并视图
+
+**Prompt:** 回国后想把面板当个人多项目规划器，要一个 merge 按钮把各项目按不同颜色汇总到一张大日历
+**Files:** `merge.html`, `index.html`
+- 新建 `merge.html`：同源读取所有项目的 localStorage（`<pid>_evts_v1` 事件 + `<pid>_plan_v7` 任务，扣除 `<pid>_hidden_evts_v1`），bocconi 硬编码事件在页内保留一份副本
+- 日历每格按"有活动的项目"渲染彩色圆点（项目色去重，最多 6 个）；点某天右栏列出当天跨项目的事件/任务，可一键跳进对应 dashboard
+- 底部图例列出全部项目 + 各自颜色 + 当期条目数；复用暗/亮主题与 dashboard 日历样式
+- `index.html` header 加"合并视图"入口
+
+## 2026-06-09 — dashboard 日历改为滚动动态月份
+
+**Prompt:** 同上（长期规划不能再写死 2026 年 4/5 月）
+**Files:** `dashboard.html`
+- 新增 `calBaseDate` 状态 + `renderCalendars()/calShift()/calToday()`，日历改为"基准月 + 下一月"两格，加上一月/下一月/今天导航按钮
+- 替换所有写死的 `renderCal(2026,3/4,...)` 调用（`refreshCalendar`、`_applyAndRefresh`、init），bocconi 项目初始仍停在 2026-04，其余项目默认本月
+
+---
+
 ## 2026-05-19 — 兑奖池新增 AI 回味聊天功能
 
 **Prompt:** 兑现 reward 太快没有回味感，希望 AI 根据 reward 内容问问题，像朋友聊天一样，并记录下来
