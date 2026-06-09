@@ -272,7 +272,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   <div class="card">
     <div class="card-title">
       <div class="card-title-left">Exam Calendar</div>
-      <button class="manage-btn" onclick="openAddEventModal()">+ Event</button>
+      <div style="display:flex;gap:.4rem">
+        <button class="manage-btn" onclick="openAddEventModal()">+ Event</button>
+        <button class="manage-btn" id="gcalBtn" onclick="gcalSync()" title="与 Google 日历双向同步（需在 GitHub Pages 网址下使用）">⟳ Google</button>
+      </div>
     </div>
     <div class="cal-nav">
       <button class="cal-nav-btn" onclick="calShift(-1)" title="上一月">&#8249;</button>
@@ -454,7 +457,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
-
+<script src="gcal.js"></script>
 <script>
 // ─── PROJECT ─────────────────────────────────────────────────────────────────
 const projectId = new URLSearchParams(location.search).get('project');
@@ -1749,6 +1752,81 @@ async function onReconnectClick(){
     }else{
       _setFsBtn('err','⚠ 恢复失败');
     }
+  }
+}
+
+// ─── GOOGLE CALENDAR SYNC ────────────────────────────────────────────────────
+const GCAL_MAP_KEY = projectId + '_gcal_map_v1';
+function _gcalMap(){try{return JSON.parse(localStorage.getItem(GCAL_MAP_KEY)||'{}');}catch(e){return {};}}
+function _saveGcalMap(m){localStorage.setItem(GCAL_MAP_KEY,JSON.stringify(m));}
+function _gcalBtn(txt){const b=document.getElementById('gcalBtn');if(b)b.textContent=txt;}
+
+async function gcalSync(){
+  if(!window.GCal){alert('gcal.js 未加载');return;}
+  if(location.protocol==='file:'){alert('Google 日历同步需要在 https 网址（GitHub Pages）下使用，本地 file:// 无法登录 Google。');return;}
+  if(!GCal.configured()){
+    const id=prompt('粘贴你的 Google OAuth Client ID（形如 xxxx.apps.googleusercontent.com）：');
+    if(!id)return;
+    GCal.setClientId(id);
+  }
+  const projColor=(_projectMeta.color)||'#9b8ec4';
+  try{
+    _gcalBtn('⟳ 连接中…');
+    await GCal.connect();
+    // ── PUSH：本项目事件 → Google（全天事件，带 jhub 标记，可更新）──
+    _gcalBtn('⟳ 上传中…');
+    const map=_gcalMap();
+    const evs=getAllEvents().filter(e=>e.type!=='pause');
+    const liveIds=new Set();
+    for(const e of evs){
+      liveIds.add(e.id);
+      const body={
+        summary:'['+projectName+'] '+e.label,
+        start:{date:e.date},
+        end:{date:GCal.nextDay(e.date)},
+        description:'jhub:'+projectId+':'+e.id,
+        colorId:GCal.nearestColorId(projColor)
+      };
+      try{
+        if(map[e.id]){await GCal.patchEvent(map[e.id],body);}
+        else{const r=await GCal.insertEvent(body);map[e.id]=r.id;}
+      }catch(err){
+        if(map[e.id]){const r=await GCal.insertEvent(body);map[e.id]=r.id;}
+        else throw err;
+      }
+    }
+    // 本地已删除的事件 → 从 Google 删掉
+    for(const localId of Object.keys(map)){
+      if(!liveIds.has(localId)){
+        try{await GCal.deleteEvent(map[localId]);}catch(e){}
+        delete map[localId];
+      }
+    }
+    _saveGcalMap(map);
+    // ── PULL：Google 上被改了日期的（仅自定义事件）→ 写回本地 ──
+    _gcalBtn('⟳ 下载中…');
+    const min=new Date();min.setMonth(min.getMonth()-6);
+    const max=new Date();max.setFullYear(max.getFullYear()+1);
+    const data=await GCal.listEvents(min.toISOString(),max.toISOString());
+    const tag='jhub:'+projectId+':';
+    let changed=false;
+    (data.items||[]).forEach(it=>{
+      if(!it.description||it.description.indexOf(tag)<0)return;
+      const localId=it.description.split(tag)[1].trim();
+      const gdate=it.start&&it.start.date;
+      if(!gdate)return;
+      const le=customEvents.find(x=>x.id===localId);
+      if(le&&le.date!==gdate){le.date=gdate;changed=true;}
+    });
+    if(changed)saveCustomEvents();
+    refreshCalendar();
+    _gcalBtn('✓ 已同步');
+    setTimeout(()=>_gcalBtn('⟳ Google'),2500);
+  }catch(err){
+    console.error(err);
+    _gcalBtn('⚠ 同步失败');
+    alert('同步失败：'+err.message);
+    setTimeout(()=>_gcalBtn('⟳ Google'),3000);
   }
 }
 

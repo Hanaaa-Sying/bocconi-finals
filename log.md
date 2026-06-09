@@ -13,6 +13,15 @@
 
 ---
 
+## 2026-06-09 — 新增 Google Calendar 双向同步（gcal.js）
+
+**Prompt:** 部署到 GitHub Pages 后，希望 dashboard 能和 Google 日历双向联动
+**Files:** `gcal.js`（新建）, `dashboard.html`
+- 新建共享模块 `gcal.js`：用 Google Identity Services token client 做纯前端 OAuth（无后端），封装 connect / listEvents / insert / patch / delete，以及 hex→Google colorId 就近映射；Client ID 存 localStorage（`jhub_gcal_client_id`），运行时网页内粘贴，不写死进仓库
+- dashboard 日历卡片加「⟳ Google」按钮 → `gcalSync()`：PUSH 本项目事件为全天事件（标题 `[项目名] label`，描述带 `jhub:<pid>:<eventId>` 标记，按项目色上色），已删除事件同步删除；PULL 把 Google 上被改了日期的（仅自定义事件）写回本地
+- 映射存 `<pid>_gcal_map_v1`（dashboardEventId ↔ gcalEventId）；仅在 https（Pages）下可用，file:// 给出提示
+- 对「单文件」约定的一处有意偏离：OAuth 代码抽成外部 `gcal.js` 以便 dashboard/merge 共用
+
 ## 2026-06-09 — daily.html 暂时隐藏兑奖池
 
 **Prompt:** 把兑奖池功能先隐藏不呈现，但保留代码，之后修改优化后再放回
