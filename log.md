@@ -13,7 +13,15 @@
 
 ---
 
-## 2026-06-10 — 接入 Supabase：账号登录 + 数据私有 + 游客 Demo
+## 2026-06-10 — 首页主入口由「每日主线任务」换成「合并视图」
+
+**Prompt:** 把首页那个每日主线任务的醒目入口换成合并视图，并删掉 header 里单独的合并视图按钮，这样点同一个位置就直接看到合并后的样子
+**Files:** `index.html`
+- `.daily-entry` 卡片 onclick 改为 `merge.html`，标题改「合并视图」、副标「多项目 · 日历总览」，分区标题由「每日」改「总览」
+- 删除 header 中单独的「合并视图」`new-btn`，避免重复入口
+- `daily.html` 文件保留，仅首页不再有入口（如需可改回）
+
+
 
 **Prompt:** 担心 Pages 公开后日程/项目泄露，想要注册账号密码、登录后只有自己能看自己的数据，并要一个游客体验版
 **Files:** `supa.js`（新建）, `login.html`（新建）, `index.html`, `dashboard.html`, `daily.html`, `merge.html`, `CLAUDE.md`
