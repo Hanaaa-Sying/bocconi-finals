@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J人时刻 · 登录</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg1:#09091a;--bg2:#101022;--bg3:#161630;--bg4:#1c1c3a;
+  --t1:#ede8f5;--t2:#a898c0;--t3:#5e5475;
+  --purple:#9b8ec4;--teal:#7ab8a8;
+  --bd:rgba(155,142,196,0.14);--bd2:rgba(155,142,196,0.3);--r:12px;
+  --exam:#d87080;
+}
+body{background:var(--bg1);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;line-height:1.5}
+body::before{content:'';display:block;height:3px;background:linear-gradient(90deg,#b09cd8,#9b8ec4,#7ab8a8);position:fixed;top:0;left:0;right:0}
+h1{font-family:'Crimson Pro',serif;font-weight:400}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:2.4rem 2.2rem;width:380px;max-width:calc(100vw - 2rem);box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.brand{text-align:center;margin-bottom:1.8rem}
+.brand h1{font-size:2.2rem;letter-spacing:.04em;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand p{color:var(--t3);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;margin-top:.3rem}
+.tabs{display:flex;gap:.4rem;margin-bottom:1.4rem;background:var(--bg3);border-radius:9px;padding:4px}
+.tab{flex:1;text-align:center;padding:.5rem;border-radius:6px;font-size:.82rem;color:var(--t3);cursor:pointer;transition:all .2s}
+.tab.active{background:var(--bg4);color:var(--t1)}
+.field{margin-bottom:.9rem}
+.label{font-size:.66rem;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.35rem;display:block}
+.input{width:100%;background:var(--bg4);border:1px solid var(--bd);color:var(--t1);border-radius:8px;padding:.6rem .75rem;font-size:.85rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+.input:focus{border-color:var(--purple)}
+.btn{width:100%;padding:.7rem;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:.86rem;cursor:pointer;font-weight:500;transition:all .2s;margin-top:.5rem}
+.btn.primary{background:var(--purple);color:#fff}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.primary:disabled{opacity:.5;cursor:default}
+.divider{display:flex;align-items:center;gap:.7rem;color:var(--t3);font-size:.68rem;margin:1.3rem 0 1rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.btn.ghost{background:transparent;border:1px solid var(--bd);color:var(--t2)}
+.btn.ghost:hover{border-color:var(--bd2);color:var(--t1)}
+.msg{font-size:.76rem;margin-top:.8rem;text-align:center;min-height:1.1em}
+.msg.err{color:var(--exam)}
+.msg.ok{color:var(--teal)}
+.hint{font-size:.66rem;color:var(--t3);text-align:center;margin-top:1.2rem;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <h1>J人时刻</h1>
+    <p>My Projects</p>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tabIn" onclick="setMode('in')">登录</div>
+    <div class="tab" id="tabUp" onclick="setMode('up')">注册</div>
+  </div>
+  <div class="field">
+    <label class="label">邮箱</label>
+    <input type="email" id="email" class="input" placeholder="you@example.com" autocomplete="username">
+  </div>
+  <div class="field">
+    <label class="label">密码</label>
+    <input type="password" id="pw" class="input" placeholder="至少 6 位" autocomplete="current-password">
+  </div>
+  <button class="btn primary" id="submitBtn" onclick="submit()">登录</button>
+  <div class="msg" id="msg"></div>
+  <div class="divider">或</div>
+  <button class="btn ghost" onclick="guest()">游客体验（看看产品长什么样）</button>
+  <div class="hint">游客模式里的项目是示例数据，不会保存、也不属于任何账号。</div>
+</div>
+
+<script src="supa.js"></script>
+<script>
+let mode='in';
+function setMode(m){
+  mode=m;
+  document.getElementById('tabIn').classList.toggle('active',m==='in');
+  document.getElementById('tabUp').classList.toggle('active',m==='up');
+  document.getElementById('submitBtn').textContent = m==='in'?'登录':'注册并进入';
+  document.getElementById('pw').setAttribute('autocomplete', m==='in'?'current-password':'new-password');
+  setMsg('');
+}
+function setMsg(t,cls){const el=document.getElementById('msg');el.textContent=t||'';el.className='msg'+(cls?' '+cls:'');}
+
+async function submit(){
+  const email=document.getElementById('email').value.trim();
+  const pw=document.getElementById('pw').value;
+  if(!email||!pw){setMsg('请填写邮箱和密码','err');return;}
+  if(pw.length<6){setMsg('密码至少 6 位','err');return;}
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; setMsg(mode==='in'?'登录中…':'注册中…');
+  try{
+    const { data, error } = mode==='in' ? await SUPA.signIn(email,pw) : await SUPA.signUp(email,pw);
+    if(error){ setMsg(_friendly(error.message),'err'); btn.disabled=false; return; }
+    if(!data.session){
+      // 注册成功但未自动登录（说明邮箱验证没关）→ 提示
+      setMsg('注册成功，请检查邮箱完成验证后再登录。','ok'); btn.disabled=false; return;
+    }
+    location.replace('index.html');
+  }catch(e){ setMsg('出错了：'+e.message,'err'); btn.disabled=false; }
+}
+
+function _friendly(m){
+  if(/Invalid login/i.test(m)) return '邮箱或密码不对';
+  if(/already registered|already exists/i.test(m)) return '这个邮箱已注册，请直接登录';
+  if(/rate limit/i.test(m)) return '操作太频繁，稍等再试';
+  return m;
+}
+
+function guest(){ SUPA.startGuest(); location.replace('index.html'); }
+
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+
+// 已登录则直接进入
+(async()=>{
+  try{ const s=await SUPA.getSession(); if(s) location.replace('index.html'); }catch(e){}
+})();
+</script>
+</body>
+</html>

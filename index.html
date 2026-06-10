@@ -101,6 +101,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
     <button class="new-btn" onclick="location.href='merge.html'">合并视图</button>
     <button class="new-btn" onclick="openNewModal()">+ 新建项目</button>
+    <button class="theme-toggle" id="acctBtn" onclick="doLogout()">退出</button>
   </div>
 </header>
 
@@ -138,6 +139,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
+<script src="supa.js"></script>
 <script>
 const HUB_KEY = 'jhub_projects_v1';
 const PALETTE = ['#9b8ec4','#7ab8a8','#d8b870','#80c4a0','#d4a0b8','#78c4e0'];
@@ -232,10 +234,22 @@ function toggleTheme(){
   localStorage.setItem('bocconi_theme', on ? 'light' : 'dark');
 }
 
+// ─── ACCOUNT ─────────────────────────────────────────────────────────────────
+async function doLogout(){
+  if(SUPA.isGuest()){ SUPA.exitGuest(); location.replace('login.html'); return; }
+  if(!confirm('退出登录？'))return;
+  await SUPA.signOut();
+  location.replace('login.html');
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
-initTheme();
-loadProjects();
-renderGrid();
+SUPA.boot().then(st=>{
+  if(st && st.authed===false) return;
+  if(SUPA.isGuest()){ const b=document.getElementById('acctBtn'); if(b)b.textContent='游客 · 去注册'; }
+  initTheme();
+  loadProjects();
+  renderGrid();
+});
 </script>
 </body>
 </html>

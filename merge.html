@@ -127,6 +127,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 
 </div>
 
+<script src="supa.js"></script>
 <script>
 const HUB_KEY='jhub_projects_v1';
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -278,17 +279,20 @@ function toggleTheme(){
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
-initTheme();
-loadProjects();
-buildAggregate();
-if(!projects.length){
-  document.getElementById('mainGrid').style.display='none';
-  document.getElementById('emptyHost').innerHTML='<div class="empty-state">暂无项目。先去 Hub 新建一个项目吧。</div>';
-}else{
-  renderCalendars();
-  renderLegend();
-  renderDetail();
-}
+SUPA.boot().then(st=>{
+  if(st && st.authed===false) return;
+  initTheme();
+  loadProjects();
+  buildAggregate();
+  if(!projects.length){
+    document.getElementById('mainGrid').style.display='none';
+    document.getElementById('emptyHost').innerHTML='<div class="empty-state">暂无项目。先去 Hub 新建一个项目吧。</div>';
+  }else{
+    renderCalendars();
+    renderLegend();
+    renderDetail();
+  }
+});
 </script>
 </body>
 </html>

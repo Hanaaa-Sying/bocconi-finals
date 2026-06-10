@@ -457,6 +457,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
+<script src="supa.js"></script>
 <script src="gcal.js"></script>
 <script>
 // ─── PROJECT ─────────────────────────────────────────────────────────────────
@@ -1642,7 +1643,7 @@ async function _fsWrite(){
   }
 }
 
-function scheduleFsWrite(){clearTimeout(fsWriteTimer);fsWriteTimer=setTimeout(_fsWrite,800);}
+function scheduleFsWrite(){if(window.SUPA&&(SUPA.isAuthed()||SUPA.isGuest()))return;clearTimeout(fsWriteTimer);fsWriteTimer=setTimeout(_fsWrite,800);}
 
 function _setFsBtn(cls,label){const btn=document.getElementById('fsBtn');if(!btn)return;btn.className='fs-btn'+(cls?' '+cls:'');btn.textContent=label;btn.style.display='inline-block';}
 
@@ -1832,6 +1833,8 @@ async function gcalSync(){
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 (async()=>{
+  const _st=await SUPA.boot();
+  if(_st && _st.authed===false) return;
   document.getElementById('projTitle').textContent = projectName;
   initTheme();
   loadCategories();
@@ -1839,7 +1842,7 @@ async function gcalSync(){
   loadHiddenEvents();
   initState();
   loadScratch();
-  if(window.showSaveFilePicker){
+  if(window.showSaveFilePicker && !SUPA.isAuthed() && !SUPA.isGuest()){
     const fromFile=await fsInitHandle();
     if(fromFile){
       const isLight=localStorage.getItem('bocconi_theme')==='light';

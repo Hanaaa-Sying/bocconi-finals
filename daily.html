@@ -303,6 +303,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
 </div>
 
+<script src="supa.js"></script>
 <script>
 // ─── PROJECT ─────────────────────────────────────────────────────────────────
 const projectId = new URLSearchParams(location.search).get('project');
@@ -795,7 +796,7 @@ async function _fsWrite(){
     if(e.name==='NotFoundError'){await _clearFsHandle();}
   }
 }
-function scheduleFsWrite(){clearTimeout(_fsTimer);_fsTimer=setTimeout(_fsWrite,800);}
+function scheduleFsWrite(){if(window.SUPA&&(SUPA.isAuthed()||SUPA.isGuest()))return;clearTimeout(_fsTimer);_fsTimer=setTimeout(_fsWrite,800);}
 
 async function _clearFsHandle(){_fsHandle=null;await _idbDel();_setFsBtn('reconnect');}
 
@@ -876,10 +877,17 @@ function toggleTheme(){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-initTheme();
-load();
-_setFsBtn('off');
-tryRestoreFromFile().then(()=>renderAll());
+SUPA.boot().then(st=>{
+  if(st && st.authed===false) return;
+  initTheme();
+  load();
+  if(window.SUPA&&(SUPA.isAuthed()||SUPA.isGuest())){
+    renderAll();
+  }else{
+    _setFsBtn('off');
+    tryRestoreFromFile().then(()=>renderAll());
+  }
+});
 </script>
 </body>
 </html>

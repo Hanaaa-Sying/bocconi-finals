@@ -13,6 +13,18 @@
 
 ---
 
+## 2026-06-10 — 接入 Supabase：账号登录 + 数据私有 + 游客 Demo
+
+**Prompt:** 担心 Pages 公开后日程/项目泄露，想要注册账号密码、登录后只有自己能看自己的数据，并要一个游客体验版
+**Files:** `supa.js`（新建）, `login.html`（新建）, `index.html`, `dashboard.html`, `daily.html`, `merge.html`, `CLAUDE.md`
+- 澄清：纯静态站做不出真隐私（前端密码可绕过、localStorage 按设备非按账号），真账号必须有后端 → 选 Supabase（Auth + Postgres + RLS，免费）
+- `supa.js`：localStorage 当同步缓存、Supabase 当云端真源。登录后 `hydrate()` 把云端 KV 灌进 localStorage；monkey-patch `localStorage.setItem/removeItem` 拦截需同步的键（debounce 800ms upsert/delete 上云），现有 save 函数零改动
+- 数据表 `app_data(user_id,key,value jsonb)` + RLS `auth.uid()=user_id`，每人只能读写自己的行；anon/publishable key 公开可提交，靠 RLS 兜底
+- 首次登录迁移：云端为空且本机有数据且 `jhub_synced_user` 标记匹配 → 把本机现有项目一次性上云
+- `login.html`：邮箱+密码 登录/注册（免邮箱验证）+「游客体验」入口；游客用 `seedGuest()` 造健身/读书/副业三个假项目，仅写 localStorage、绝不入云
+- 四个页面统一加门禁：init 第一步 `SUPA.boot()`，无 session 跳 login.html；dashboard/daily 在登录态/游客态短路本地文件保存层（云端取代，避免旧 JSON 回灌覆盖云数据）
+- `isSyncedKey()` 圈定同步键（`jhub_projects_v1`/`daily_*`/`*_plan_v7` 等），排除 theme、gcal client id、anthropic key 等设备级键
+
 ## 2026-06-09 — 新增 Google Calendar 双向同步（gcal.js）
 
 **Prompt:** 部署到 GitHub Pages 后，希望 dashboard 能和 Google 日历双向联动

@@ -128,7 +128,7 @@ One entry = one complete feature or fix. If a feature took multiple conversation
 **Step 2 — commit and push to GitHub:**
 
 ```powershell
-git -C "D:\1mylife\vibecoding\J人时刻" add dashboard.html log.md CLAUDE.md index.html daily.html merge.html gcal.js .gitignore
+git -C "D:\1mylife\vibecoding\J人时刻" add dashboard.html log.md CLAUDE.md index.html daily.html merge.html gcal.js supa.js login.html .gitignore
 git -C "D:\1mylife\vibecoding\J人时刻" commit -m "<same one-line summary as log entry>"
 git -C "D:\1mylife\vibecoding\J人时刻" push origin main
 ```
